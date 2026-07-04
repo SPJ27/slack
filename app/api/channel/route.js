@@ -4,13 +4,52 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 export async function POST(request) {
-    const {name, description, isPublic} = await request.json()
-    const supabase = await createClient(await cookies())
-    const user = await get_user()
-    const {data, error} = await supabase.from('channels').insert({name, description, isPublic, created_by: user.id})
-    if (error) {
-    return NextResponse.json({ error: "unable to insert data" }, { status: 500 })
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json(
+      { error: "Invalid JSON body" },
+      { status: 400 },
+    );
+  }
+
+  const { name, description, isPublic } = body;
+
+  const user = await get_user();
+  if (!user) {
+    return NextResponse.json(
+      { error: "You must be signed in to create a channel" },
+      { status: 401 },
+    );
+  }
+
+  const supabase = await createClient(await cookies());
+  const { data, error } = await supabase
+    .from("channels")
+    .insert({
+      name: name.trim(),
+      description: description ?? null,
+      isPublic: isPublic ?? true,
+      created_by: user.id,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    if (error.code === "23505") {
+      return NextResponse.json(
+        { error: `A channel named "${name.trim()}" already exists` },
+        { status: 409 },
+      );
     }
-    console.log(data)
-    return NextResponse.json({message: 'success'}, {status: 200})
+
+    console.error("Failed to create channel:", error);
+    return NextResponse.json(
+      { error: "Unable to create channel" },
+      { status: 500 },
+    );
+  }
+
+  return NextResponse.json({ message: "success", data }, { status: 201 });
 }
