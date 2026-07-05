@@ -285,7 +285,7 @@ const ChannelsSidebar = () => {
   useEffect(() => {
      const fetchChannels = async () => {
       try {
-        const res = await fetch("/api/channel");
+        const res = await fetch("/api/user");
         const body = await res.json();
  
         if (!res.ok) {
@@ -327,7 +327,7 @@ const ChannelsSidebar = () => {
         </div>
 
         <div className="h-px bg-white/15 my-3 mx-2" />
-        <SectionHeader label="stardance" />
+        <SectionHeader label="channels" />
         <div className="flex flex-col gap-[2px]">
           {channels?.map((channel) => (
             <Channel

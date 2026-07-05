@@ -178,13 +178,6 @@ const Page = () => {
       <div className="flex-1 flex min-h-0">
         <ChannelsSidebar />
         <MainChannel />
-        <button onClick={async ()=>{
-           const res = await fetch("/api/channel", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: 'test3', description:'test2', isPublic: true }),
-      });
-        }}>text</button>
       </div>
     </div>
   );
