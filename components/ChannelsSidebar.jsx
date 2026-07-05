@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useDebugValue } from "react";
 import {
   Settings,
   SquarePen,
@@ -97,9 +97,7 @@ const CreateChannelModal = ({ onClose }) => {
       let payload = null;
       try {
         payload = await res.json();
-      } catch {
-        
-      }
+      } catch {}
 
       if (!res.ok) {
         const fallback =
@@ -117,13 +115,14 @@ const CreateChannelModal = ({ onClose }) => {
       }
 
       setStatus("success");
-      
+
       setTimeout(() => {
         onClose();
       }, 900);
     } catch {
-      
-      setErrorMessage("Couldn't reach the server. Check your connection and try again.");
+      setErrorMessage(
+        "Couldn't reach the server. Check your connection and try again.",
+      );
       setStatus("error");
     }
   };
@@ -137,9 +136,10 @@ const CreateChannelModal = ({ onClose }) => {
         className="w-[480px] max-w-[90vw] rounded-md bg-white shadow-2xl overflow-hidden"
         onMouseDown={(e) => e.stopPropagation()}
       >
-    
         <div className="flex items-center justify-between px-5 pt-3 pb-2 border-b border-black/10">
-          <h2 className="text-[20px] font-sans font-bold tracking-tight text-[#1D1C1D]">Create a channel</h2>
+          <h2 className="text-[20px] font-sans font-bold tracking-tight text-[#1D1C1D]">
+            Create a channel
+          </h2>
           <button
             onClick={onClose}
             disabled={isLoading}
@@ -150,7 +150,6 @@ const CreateChannelModal = ({ onClose }) => {
           </button>
         </div>
 
-  
         <div className="px-5 py-5">
           {errorMessage && (
             <div className="flex items-start gap-2 mb-4 rounded-md border border-red-200 bg-red-50 px-3 py-2.5 text-[13px] text-red-700">
@@ -191,7 +190,6 @@ const CreateChannelModal = ({ onClose }) => {
             Description
           </label>
           <div className="relative">
-
             <input
               ref={descriptionRef}
               value={description}
@@ -283,7 +281,26 @@ const CreateChannelModal = ({ onClose }) => {
 
 const ChannelsSidebar = () => {
   const [showModal, setShowModal] = useState(false);
-
+  const [channels, setChannels] = useState([]);
+  useEffect(() => {
+     const fetchChannels = async () => {
+      try {
+        const res = await fetch("/api/channel");
+        const body = await res.json();
+ 
+        if (!res.ok) {
+          setChannelsError(body?.error || "Unable to load channels");
+          return;
+        }
+ 
+        setChannels(body.data ?? []);
+      } catch {
+        setChannelsError("Couldn't reach the server to load channels");
+      }
+    };
+ 
+    fetchChannels();  
+  }, []);
   return (
     <div className="w-[280px] shrink-0 bg-[#5E2C5f] text-white flex flex-col font-sans select-none relative overflow-hidden">
       <div className="flex items-center justify-between px-4 pt-3 pb-3">
@@ -312,23 +329,13 @@ const ChannelsSidebar = () => {
         <div className="h-px bg-white/15 my-3 mx-2" />
         <SectionHeader label="stardance" />
         <div className="flex flex-col gap-[2px]">
-          <Channel label="stardance" unread />
-          <Channel label="stardance-bulletin" />
-          <Channel label="stardance-construction" />
-          <Channel label="stardance-help" unread />
-          <Channel label="stardance-monitor" />
-          <Channel label="stardance-support-scouts" locked />
-          <Channel label="stardance-tickets" locked unread />
-          <Channel label="c-reem-cheese" active />
-          <Channel label="stardance-tracker" />
-          <Channel label="stardance-watcher" unread />
-          <Channel label="support-scouts-lounge" locked />
-        </div>
-
-        <SectionHeader label="flavortown" />
-        <div className="flex flex-col gap-[2px]">
-          <Channel label="flavortown" unread />
-          <Channel label="flavortown-kitchen" />
+          {channels?.map((channel) => (
+            <Channel
+              key={channel.id}
+              label={channel.name}
+              locked={!channel.isPublic}
+            />
+          ))}
         </div>
       </div>
 

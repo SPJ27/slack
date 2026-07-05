@@ -16,6 +16,13 @@ export async function POST(request) {
 
   const { name, description, isPublic } = body;
 
+  if (typeof name !== "string" || name.trim().length === 0) {
+    return NextResponse.json(
+      { error: "'name' is required and must be a non-empty string" },
+      { status: 400 },
+    );
+  }
+
   const user = await get_user();
   if (!user) {
     return NextResponse.json(
@@ -25,6 +32,7 @@ export async function POST(request) {
   }
 
   const supabase = await createClient(await cookies());
+
   const { data, error } = await supabase
     .from("channels")
     .insert({
@@ -35,7 +43,6 @@ export async function POST(request) {
     })
     .select()
     .single();
-
   if (error) {
     if (error.code === "23505") {
       return NextResponse.json(
@@ -51,5 +58,71 @@ export async function POST(request) {
     );
   }
 
+  const { error: memberError } = await supabase
+    .from("channel_members")
+    .insert({
+      channel_id: data.id,
+      user_id: user.id,
+    });
+
+  if (memberError) {
+    console.error("Failed to add creator as channel member:", memberError);
+
+    return NextResponse.json(
+      {
+        message: "Channel created, but failed to add you as a member",
+        data,
+        error: "Unable to add you as a member",
+      },
+      { status: 207 },
+    );
+  }
+
   return NextResponse.json({ message: "success", data }, { status: 201 });
+}
+
+export async function GET(request) {
+  const supabase = await createClient(await cookies());
+ 
+  const user = await get_user();
+  if (!user) {
+    return NextResponse.json(
+      { error: "You must be signed in to view channels" },
+      { status: 401 },
+    );
+  }
+ 
+  const { data: memberships, error: membershipError } = await supabase
+    .from("channel_members")
+    .select("channel_id")
+    .eq("user_id", user.id);
+ 
+  if (membershipError) {
+    console.error("Failed to fetch channel memberships:", membershipError);
+    return NextResponse.json(
+      { error: "Unable to fetch channels" },
+      { status: 500 },
+    );
+  }
+ 
+  const channelIds = (memberships ?? []).map((m) => m.channel_id);
+ 
+  if (channelIds.length === 0) {
+    return NextResponse.json({ message: "success", data: [] }, { status: 200 });
+  }
+ 
+  const { data: channels, error: channelsError } = await supabase
+    .from("channels")
+    .select("*")
+    .in("id", channelIds);
+ 
+  if (channelsError) {
+    console.error("Failed to fetch channel info:", channelsError);
+    return NextResponse.json(
+      { error: "Unable to fetch channels" },
+      { status: 500 },
+    );
+  }
+ 
+  return NextResponse.json({ message: "success", data: channels }, { status: 200 });
 }
