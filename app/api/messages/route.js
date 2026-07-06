@@ -30,5 +30,5 @@ export async function POST(request) {
       return NextResponse.json({message: 'Unable to send message'}, {status: 500})
     }
     return NextResponse.json({message: 'successful'}, {status: 200})
-// when in a channel, search by 'to', and if a thread is open, search by reply to thread id
+// when in a channel, search by 'to', and if a thread is open, search by reply to thread ida
 }

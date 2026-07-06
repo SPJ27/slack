@@ -8,10 +8,7 @@ export async function POST(request) {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json(
-      { error: "Invalid JSON body" },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
   const { name, description, isPublic } = body;
@@ -58,12 +55,10 @@ export async function POST(request) {
     );
   }
 
-  const { error: memberError } = await supabase
-    .from("channel_members")
-    .insert({
-      channel_id: data.id,
-      user_id: user.id,
-    });
+  const { error: memberError } = await supabase.from("channel_members").insert({
+    channel_id: data.id,
+    user_id: user.id,
+  });
 
   if (memberError) {
     console.error("Failed to add creator as channel member:", memberError);
@@ -79,4 +74,21 @@ export async function POST(request) {
   }
 
   return NextResponse.json({ message: "success", data }, { status: 201 });
+}
+
+export async function GET(request) {
+  const searchParams = request.nextUrl.searchParams;
+  const id = searchParams.get("id");
+  const user = await get_user();
+  if (!user)
+    return NextResponse.json({ message: "unauthenticated" }, { status: 401 });
+  const supabase = await createClient(await cookies());
+  const { data, error } = await supabase
+    .from("channels")
+    .select()
+    .eq("id", id)
+    .single();
+  if (!data || error)
+    return NextResponse.json( { message: error.message }, { status: 500 });
+  return NextResponse.json( { data }, { status: 200 });
 }
