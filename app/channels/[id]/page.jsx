@@ -32,21 +32,21 @@ const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
 import "react-quill-new/dist/quill.snow.css";
 import { useParams } from "next/navigation";
 
-const ChannelHeader = () => (
+const ChannelHeader = ({data, members}) => (
   <div className="h-14 shrink-0 border-b border-black/10 flex items-center px-4 justify-between">
     <div className="flex items-center gap-2 min-w-0">
       <Star className="size-4 text-[#8a8a8a] shrink-0" />
-      <span className="font-bold text-[15px] flex items-center gap-1 shrink-0">
-        <Hash className="size-4" /> stardance-help
+      <span className="font-bold text-[17px] flex items-center gap-1 shrink-0">
+        {data.isPublic ? <Hash className="size-4" />: <Lock className='size-4'/>} {data?.name}
       </span>
-      <span className="text-neutral-500  text-[14px] ">sample</span>
+      <span className="text-neutral-500  text-[14px] ">{data.description}</span>
     </div>
     <div className="flex items-center gap-4 shrink-0">
       <div className="flex items-center -space-x-2">
         <div className="size-6 rounded-md bg-amber-700 border-2 border-[#1a1d21]" />
         <div className="size-6 rounded-md bg-emerald-700 border-2 border-[#1a1d21]" />
       </div>
-      <span className="text-[13px] text-[#8a8a8a]">210</span>
+      <span className="text-[13px] text-[#8a8a8a]">{members.length}</span>
       <div className="flex items-center gap-1 text-[#8a8a8a]">
         <Headphones className="size-4" />
         <ChevronDown className="size-3.5" />
@@ -265,9 +265,9 @@ const Composer = () => {
   );
 };
 
-const MainChannel = () => (
+const MainChannel = ({data, members}) => (
   <div className="flex-1 min-w-0 h-screen bg-white text-black flex flex-col min-h-0">
-    <ChannelHeader />
+    <ChannelHeader data={data} members={members}/>
     <div className="flex-1 min-h-0 overflowpy-2">
       <NewDivider />
       <SimpleMessage
@@ -289,12 +289,16 @@ const MainChannel = () => (
 
 const Page = () => {
   const params = useParams()
+  const [data, setData] = useState({})
+  const [members, setMembers] = useState({})
   useEffect(()=>{
     const fetchData = async () => {
 
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/channel?id=${params.id}`)
       const body = await res.json()
-      console.log(body)
+      console.log(body.data)
+      setData(body.data)
+      setMembers(body.members)
     }
     fetchData()
   }, [])
@@ -302,7 +306,7 @@ const Page = () => {
     <div className="w-full  flex flex-col font-sans overflow-hidden">
       <div className="flex-1 flex min-h-0">
         <ChannelsSidebar />
-        <MainChannel />
+        <MainChannel data={data} members={members}/>
       </div>
     </div>
   );

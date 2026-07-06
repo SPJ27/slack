@@ -15,6 +15,8 @@ import {
   CircleCheck,
   CircleAlert,
 } from "lucide-react";
+import { useParams } from "next/navigation";
+import Link from "next/link";
 
 const TopItem = ({ Icon, label, trailing }) => (
   <span className="flex mt-1.5 pl-2 font-normal text-sm font-sans items-center gap-1.5 text-[#f9edffcc]">
@@ -29,8 +31,9 @@ const SectionHeader = ({ label }) => (
   </div>
 );
 
-const Channel = ({ label, locked = false, unread = false, active = false }) => (
-  <div
+const Channel = ({ label, locked = false, unread = false, active = false, id }) => (
+  <a  
+  href={`/channels/${id}`}
     className={`flex items-center gap-2 pl-6 pr-2 py-0.5 rounded-md cursor-pointer text-[15px] ${
       active
         ? "bg-[#1164A3] text-white font-semibold"
@@ -45,7 +48,7 @@ const Channel = ({ label, locked = false, unread = false, active = false }) => (
       <Hash className="size-[15px] shrink-0" strokeWidth={2} />
     )}
     <span className="truncate">{label}</span>
-  </div>
+  </a>
 );
 
 const CreateChannelModal = ({ onClose }) => {
@@ -282,6 +285,7 @@ const CreateChannelModal = ({ onClose }) => {
 const ChannelsSidebar = () => {
   const [showModal, setShowModal] = useState(false);
   const [channels, setChannels] = useState([]);
+  const params = useParams()
   useEffect(() => {
      const fetchChannels = async () => {
       try {
@@ -334,6 +338,8 @@ const ChannelsSidebar = () => {
               key={channel.id}
               label={channel.name}
               locked={!channel.isPublic}
+              active={channel.id==params?.id}
+              id={channel.id}
             />
           ))}
         </div>

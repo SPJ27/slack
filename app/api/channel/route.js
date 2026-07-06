@@ -88,7 +88,30 @@ export async function GET(request) {
     .select()
     .eq("id", id)
     .single();
+  const { data: memberships, error: memberError } = await supabase
+    .from("channel_members")
+    .select()
+    .eq("channel_id", id);
+  console.log(memberships)
+  const memberIds = (memberships ?? []).map((m) => m.user_id);
+ 
+  if (memberIds.length === 0) {
+    return NextResponse.json({ message: "success", data: [] }, { status: 200 });
+  }
+ 
+  const { data: members, error: channelsError } = await supabase
+    .from("users")
+    .select("*")
+    .in("id", memberIds);
+  if (channelsError) {
+    console.error("Failed to fetch channel info:", channelsError);
+    return NextResponse.json(
+      { error: "Unable to fetch channels" },
+      { status: 500 },
+    );
+  }
+ 
   if (!data || error)
-    return NextResponse.json( { message: error.message }, { status: 500 });
-  return NextResponse.json( { data }, { status: 200 });
+    return NextResponse.json({ message: error.message }, { status: 500 });
+  return NextResponse.json({ data, members }, { status: 200 });
 }
