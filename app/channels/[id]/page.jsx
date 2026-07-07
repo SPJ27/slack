@@ -31,13 +31,21 @@ import ChannelsSidebar from "@/components/ChannelsSidebar";
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
 import "react-quill-new/dist/quill.snow.css";
 import { useParams } from "next/navigation";
+import { createClient } from "@/utils/supabase/client";
+import { get_user_id } from "@/utils/auth/get_user_id";
+import { getCachedUser, loadUsers, loadUser } from "@/utils/auth/user-cache";
 
-const ChannelHeader = ({data, members}) => (
+const ChannelHeader = ({ data, members }) => (
   <div className="h-14 shrink-0 border-b border-black/10 flex items-center px-4 justify-between">
     <div className="flex items-center gap-2 min-w-0">
       <Star className="size-4 text-[#8a8a8a] shrink-0" />
       <span className="font-bold text-[17px] flex items-center gap-1 shrink-0">
-        {data.isPublic ? <Hash className="size-4" />: <Lock className='size-4'/>} {data?.name}
+        {data.isPublic ? (
+          <Hash className="size-4" />
+        ) : (
+          <Lock className="size-4" />
+        )}{" "}
+        {data?.name}
       </span>
       <span className="text-neutral-500  text-[14px] ">{data.description}</span>
     </div>
@@ -59,21 +67,21 @@ const ChannelHeader = ({data, members}) => (
 );
 
 const Avatar = ({ color }) => (
-  <div className={`size-9 rounded-md ${color} shrink-0`} />
+  <div className={`size-9 mt-1 rounded-md ${color} shrink-0`} />
 );
 
 const SimpleMessage = ({ name, time, text, color, badge }) => (
-  <div className="flex gap-2 px-4 py-1 items-center hover:bg-black/[0.03]">
+  <div className="flex gap-2 px-4 py-1  hover:bg-black/[0.03]">
     <Avatar color={color} />
     <div className="min-w-0">
       <div className="flex items-baseline gap-2">
-        <span className="font-bold text-[15px]">{name}</span>
+        <span className="font-semibold text-[15px]">{name}</span>
         <span className="text-[12px] text-[#8a8a8a]">{time}</span>
       </div>
-      <p className="text-[15px] font-normal leading-[1.45] tracking-[0.01em] text-[#1d1c1d] antialiased">
-        {text}
-      </p>{" "}
-    </div>
+      < div
+      dangerouslySetInnerHTML={{ __html: text }}
+      className="text-[15px] font-normal leading-[1.45] tracking-[0.01em] text-[#1d1c1d] antialiased"/>
+        </div>
   </div>
 );
 
@@ -172,7 +180,7 @@ const QuillToolbar = ({ onFormat, activeFormats }) => {
 
 const quillModules = { toolbar: false };
 
-const Composer = ({channel_id}) => {
+const Composer = ({ channel_id }) => {
   const [value, setValue] = useState("");
   const [activeFormats, setActiveFormats] = useState({});
   const quillRef = useRef(null);
@@ -190,7 +198,10 @@ const Composer = ({channel_id}) => {
   const handleFormat = (name, value) => {
     const editor = getEditor();
     if (!editor) return;
-    const range = editor.getSelection() || { index: editor.getLength(), length: 0 };
+    const range = editor.getSelection() || {
+      index: editor.getLength(),
+      length: 0,
+    };
     editor.focus();
     editor.setSelection(range);
     editor.format(name, value);
@@ -202,16 +213,16 @@ const Composer = ({channel_id}) => {
     if (!text) return;
     console.log("send:", value);
     const res = await fetch("/api/messages", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          to: channel_id,
-          message: value,
-          type: 'CHANNEL',
-        }),
-      });
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        to: channel_id,
+        message: value,
+        type: "CHANNEL",
+      }),
+    });
 
     setValue("");
   };
@@ -276,34 +287,43 @@ const Composer = ({channel_id}) => {
     </div>
   );
 };
-
-const MainChannel = ({data, members, id}) => (
-  <div className="flex-1 min-w-0 h-screen bg-white text-black flex flex-col min-h-0">
-    <ChannelHeader data={data} members={members}/>
-    <div className="flex-1 min-h-0 overflowpy-2">
-      <NewDivider />
-      <SimpleMessage
-        name="spj"
-        time="11:31 AM"
-        text="sample"
-        color="bg-sky-300"
-      />
-      <SimpleMessage
-        name="test"
-        time="1:33 PM"
-        text="hello world"
-        color="bg-neutral-800"
-      />
+const NotInChannel = () => {
+  return (
+    <div className="px-3 py-2 mb-10 border border-gray-300 max-w-xl mx-auto rounded-md">
+      You need to join this channel to reply
     </div>
-    <Composer channel_id={id}/>
-  </div>
-);
+  );
+};
 
 const PrivateChannelNotice = () => (
   <div className="flex-1 min-w-0 h-screen bg-white text-black flex flex-col items-center justify-center gap-2">
     <Lock className="size-6 text-[#8a8a8a]" />
     <p className="text-[15px] font-semibold">This channel is private</p>
-    <p className="text-[13px] text-[#8a8a8a]">You must be a member to view its content</p>
+    <p className="text-[13px] text-[#8a8a8a]">
+      You must be a member to view its content
+    </p>
+  </div>
+);
+
+const MainChannel = ({ data, members, id, messages, inChannel }) => (
+  <div className="flex-1 min-w-0 h-screen bg-white text-black flex flex-col min-h-0">
+    <ChannelHeader data={data} members={members} />
+    <div className="flex-1 min-h-0 overflow-y-auto py-2">
+      <NewDivider />
+      {messages.map((m) => (
+        <SimpleMessage
+          key={m.id}
+          name={getCachedUser(m.from)?.displayName ?? "..."}
+          time={new Date(m.created_at).toLocaleTimeString([], {
+            hour: "numeric",
+            minute: "2-digit",
+          })}
+          text={m.message}
+          color="bg-sky-300"
+        />
+      ))}
+    </div>
+    {inChannel ? <Composer channel_id={id} /> : <NotInChannel />}
   </div>
 );
 
@@ -311,17 +331,27 @@ const Page = () => {
   const params = useParams();
   const [data, setData] = useState(null);
   const [members, setMembers] = useState([]);
+  const [messages, setMessages] = useState([]);
   const [isPrivate, setIsPrivate] = useState(false);
+  const [inChannel, setInChannel] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [, forceRerender] = useState(0);
 
   useEffect(() => {
+    let cancelled = false;
+    let channel = null;
+    const supabase = createClient();
+
     const fetchData = async () => {
       setLoading(true);
       setIsPrivate(false);
+      setMessages([]);
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/channel?id=${params.id}`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/channel?id=${params.id}`,
       );
+
+      if (cancelled) return;
 
       if (res.status === 403) {
         setData(null);
@@ -339,11 +369,55 @@ const Page = () => {
       }
 
       const body = await res.json();
+      if (cancelled) return;
+      setInChannel(body.inChannel);
       setData(body.data);
       setMembers(body.members ?? []);
       setLoading(false);
+
+      const { data: history } = await supabase
+        .from("messages")
+        .select("*")
+        .eq("type", "CHANNEL")
+        .eq("to", params.id)
+        .order("created_at", { ascending: true });
+
+      if (cancelled) return;
+      setMessages(history ?? []);
+
+      await loadUsers((history ?? []).map((m) => m.from));
+      if (!cancelled) forceRerender((n) => n + 1);
+
+      channel = supabase
+        .channel(`messages:${params.id}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "messages",
+            filter: `to=eq.${params.id}`,
+          },
+          (payload) => {
+            if (payload.new.type !== "CHANNEL") return;
+            setMessages((prev) => [...prev, payload.new]);
+
+            if (!getCachedUser(payload.new.from)) {
+              loadUser(payload.new.from).then(() => {
+                if (!cancelled) forceRerender((n) => n + 1);
+              });
+            }
+          },
+        )
+        .subscribe();
     };
+
     fetchData();
+
+    return () => {
+      cancelled = true;
+      if (channel) supabase.removeChannel(channel);
+    };
   }, [params.id]);
 
   return (
@@ -353,10 +427,16 @@ const Page = () => {
         {!loading && isPrivate ? (
           <PrivateChannelNotice />
         ) : (
-          <MainChannel data={data ?? {}} members={members} id={params.id} />
+          <MainChannel
+            inChannel={inChannel}
+            data={data ?? {}}
+            members={members}
+            id={params.id}
+            messages={messages}
+          />
         )}
       </div>
     </div>
   );
 };
-export default Page
+export default Page;
