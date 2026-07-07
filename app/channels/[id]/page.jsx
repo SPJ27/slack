@@ -172,7 +172,7 @@ const QuillToolbar = ({ onFormat, activeFormats }) => {
 
 const quillModules = { toolbar: false };
 
-const Composer = () => {
+const Composer = ({channel_id}) => {
   const [value, setValue] = useState("");
   const [activeFormats, setActiveFormats] = useState({});
   const quillRef = useRef(null);
@@ -197,10 +197,22 @@ const Composer = () => {
     refreshActiveFormats();
   };
 
-  const handleSend = () => {
+  const handleSend = async () => {
     const text = value.replace(/<(.|\n)*?>/g, "").trim();
     if (!text) return;
     console.log("send:", value);
+    const res = await fetch("/api/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          to: channel_id,
+          message: value,
+          type: 'CHANNEL',
+        }),
+      });
+
     setValue("");
   };
 
@@ -265,7 +277,7 @@ const Composer = () => {
   );
 };
 
-const MainChannel = ({data, members}) => (
+const MainChannel = ({data, members, id}) => (
   <div className="flex-1 min-w-0 h-screen bg-white text-black flex flex-col min-h-0">
     <ChannelHeader data={data} members={members}/>
     <div className="flex-1 min-h-0 overflowpy-2">
@@ -283,33 +295,68 @@ const MainChannel = ({data, members}) => (
         color="bg-neutral-800"
       />
     </div>
-    <Composer />
+    <Composer channel_id={id}/>
+  </div>
+);
+
+const PrivateChannelNotice = () => (
+  <div className="flex-1 min-w-0 h-screen bg-white text-black flex flex-col items-center justify-center gap-2">
+    <Lock className="size-6 text-[#8a8a8a]" />
+    <p className="text-[15px] font-semibold">This channel is private</p>
+    <p className="text-[13px] text-[#8a8a8a]">You must be a member to view its content</p>
   </div>
 );
 
 const Page = () => {
-  const params = useParams()
-  const [data, setData] = useState({})
-  const [members, setMembers] = useState({})
-  useEffect(()=>{
-    const fetchData = async () => {
+  const params = useParams();
+  const [data, setData] = useState(null);
+  const [members, setMembers] = useState([]);
+  const [isPrivate, setIsPrivate] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/channel?id=${params.id}`)
-      const body = await res.json()
-      console.log(body.data)
-      setData(body.data)
-      setMembers(body.members)
-    }
-    fetchData()
-  }, [])
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      setIsPrivate(false);
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/channel?id=${params.id}`
+      );
+
+      if (res.status === 403) {
+        setData(null);
+        setMembers([]);
+        setIsPrivate(true);
+        setLoading(false);
+        return;
+      }
+
+      if (!res.ok) {
+        setData(null);
+        setMembers([]);
+        setLoading(false);
+        return;
+      }
+
+      const body = await res.json();
+      setData(body.data);
+      setMembers(body.members ?? []);
+      setLoading(false);
+    };
+    fetchData();
+  }, [params.id]);
+
   return (
-    <div className="w-full  flex flex-col font-sans overflow-hidden">
+    <div className="w-full flex flex-col font-sans overflow-hidden">
       <div className="flex-1 flex min-h-0">
         <ChannelsSidebar />
-        <MainChannel data={data} members={members}/>
+        {!loading && isPrivate ? (
+          <PrivateChannelNotice />
+        ) : (
+          <MainChannel data={data ?? {}} members={members} id={params.id} />
+        )}
       </div>
     </div>
   );
 };
-
-export default Page;
+export default Page

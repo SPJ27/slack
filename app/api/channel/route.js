@@ -79,39 +79,53 @@ export async function POST(request) {
 export async function GET(request) {
   const searchParams = request.nextUrl.searchParams;
   const id = searchParams.get("id");
+
+  if (!id) {
+    return NextResponse.json({ error: "'id' is required" }, { status: 400 });
+  }
+
   const user = await get_user();
-  if (!user)
+  if (!user) {
     return NextResponse.json({ message: "unauthenticated" }, { status: 401 });
+  }
+
   const supabase = await createClient(await cookies());
+
   const { data, error } = await supabase
     .from("channels")
     .select()
     .eq("id", id)
     .single();
-  const { data: memberships, error: memberError } = await supabase
+
+  if (error || !data) {
+    return NextResponse.json({ message: error?.message ?? "Channel not found" }, { status: 404 });
+  }
+
+  const { data: memberships } = await supabase
     .from("channel_members")
     .select()
     .eq("channel_id", id);
-  console.log(memberships)
+
   const memberIds = (memberships ?? []).map((m) => m.user_id);
- 
-  if (memberIds.length === 0) {
-    return NextResponse.json({ message: "success", data: [] }, { status: 200 });
+  const inChannel = memberIds.includes(user.id);
+
+  if (!data.isPublic && !inChannel) {
+    console.log('ts')
+    return NextResponse.json({ message: "private channel" }, { status: 403 });
   }
- 
-  const { data: members, error: channelsError } = await supabase
+
+  if (memberIds.length === 0) {
+    return NextResponse.json({ data, members: [], inChannel }, { status: 200 });
+  }
+
+  const { data: members, error: membersError } = await supabase
     .from("users")
     .select("*")
     .in("id", memberIds);
-  if (channelsError) {
-    console.error("Failed to fetch channel info:", channelsError);
-    return NextResponse.json(
-      { error: "Unable to fetch channels" },
-      { status: 500 },
-    );
+
+  if (membersError) {
+    return NextResponse.json({ error: "Unable to fetch members" }, { status: 500 });
   }
- 
-  if (!data || error)
-    return NextResponse.json({ message: error.message }, { status: 500 });
-  return NextResponse.json({ data, members }, { status: 200 });
+
+  return NextResponse.json({ data, members, inChannel }, { status: 200 });
 }

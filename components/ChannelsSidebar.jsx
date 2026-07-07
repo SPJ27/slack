@@ -36,7 +36,7 @@ const Channel = ({ label, locked = false, unread = false, active = false, id }) 
   href={`/channels/${id}`}
     className={`flex items-center gap-2 pl-6 pr-2 py-0.5 rounded-md cursor-pointer text-[15px] ${
       active
-        ? "bg-[#1164A3] text-white font-semibold"
+        ? "bg-[#481349] text-white font-semibold"
         : unread
           ? "font-bold text-white hover:bg-white/10"
           : "font-normal text-[#c2b7c4] hover:bg-white/10"
