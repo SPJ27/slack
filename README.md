@@ -6,7 +6,6 @@ Tech Stack (Temp)
 
  TODO
  - Add attachments
- - Add join channels feature
  - Add search feature
  - Add user edit page
  - Add user card

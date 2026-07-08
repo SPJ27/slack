@@ -1,4 +1,5 @@
 import { get_user } from "@/utils/auth/get_user";
+import { get_channel_data } from "@/utils/db/channel";
 import { createClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
@@ -24,12 +25,7 @@ export async function POST(req) {
 
     const supabase = await createClient(await cookies());
 
-    const { data: channel, error: channelError } = await supabase
-      .from("channels")
-      .select()
-      .eq("id", channel_id)
-      .single();
-    console.log(channel)
+    const { data: channel, error: channelError } = await get_channel_data()
     if (channelError || !channel) {
       return NextResponse.json({ message: "channel not found" }, { status: 404 });
     }
@@ -40,7 +36,7 @@ export async function POST(req) {
         { status: 403 },
       );
     }
-
+    
     const { error: insertError } = await supabase
       .from("channel_members")
       .insert({ channel_id, user_id: user.id });

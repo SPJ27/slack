@@ -12,7 +12,6 @@ export async function POST(request) {
   }
   const { to, message, attachments, reply_to, type } = body;
   const user = await get_user();
-  console.log(user)
   const supabase = await createClient(await cookies());
   if (type == "CHANNEL") {
     const { data: userInChannel, error: userInChannelError } = await supabase

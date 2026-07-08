@@ -1,4 +1,5 @@
 import { get_user } from "@/utils/auth/get_user";
+import { get_channel_data, get_channel_members, insert_channel_data } from "@/utils/db/channel";
 import { createClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
@@ -27,19 +28,7 @@ export async function POST(request) {
       { status: 401 },
     );
   }
-
-  const supabase = await createClient(await cookies());
-
-  const { data, error } = await supabase
-    .from("channels")
-    .insert({
-      name: name.trim(),
-      description: description ?? null,
-      isPublic: isPublic ?? true,
-      created_by: user.id,
-    })
-    .select()
-    .single();
+  const {data, error} = await insert_channel_data(name, description, isPublic, user.id)
   if (error) {
     if (error.code === "23505") {
       return NextResponse.json(
@@ -54,7 +43,7 @@ export async function POST(request) {
       { status: 500 },
     );
   }
-
+  const supabase = await createClient(await cookies())
   const { error: memberError } = await supabase.from("channel_members").insert({
     channel_id: data.id,
     user_id: user.id,
@@ -88,36 +77,24 @@ export async function GET(request) {
   if (!user) {
     return NextResponse.json({ message: "unauthenticated" }, { status: 401 });
   }
-
-  const supabase = await createClient(await cookies());
-
-  const { data, error } = await supabase
-    .from("channels")
-    .select()
-    .eq("id", id)
-    .single();
+  const {data, error} = await get_channel_data(id)
 
   if (error || !data) {
     return NextResponse.json({ message: error?.message ?? "Channel not found" }, { status: 404 });
   }
-
-  const { data: memberships } = await supabase
-    .from("channel_members")
-    .select()
-    .eq("channel_id", id);
+  const memberships = await get_channel_members(id)
 
   const memberIds = (memberships ?? []).map((m) => m.user_id);
   const inChannel = memberIds.includes(user.id);
 
   if (!data.isPublic && !inChannel) {
-    console.log('ts')
     return NextResponse.json({ message: "private channel" }, { status: 403 });
   }
 
   if (memberIds.length === 0) {
     return NextResponse.json({ data, members: [], inChannel }, { status: 200 });
   }
-
+  const supabase = await createClient(await cookies())
   const { data: members, error: membersError } = await supabase
     .from("users")
     .select("*")
