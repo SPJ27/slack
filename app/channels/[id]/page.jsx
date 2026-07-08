@@ -1,6 +1,5 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
-import dynamic from "next/dynamic";
+import { useState, useEffect } from "react";
 import {
   ChevronDown,
   Headphones,
@@ -8,31 +7,14 @@ import {
   Hash,
   Lock,
   Search,
-  Mic,
-  Video,
   Bell,
   MoreVertical,
-  Bold,
-  Italic,
-  Underline,
-  Strikethrough,
   Link as LinkIcon,
-  List,
-  ListOrdered,
-  Code,
-  Plus,
-  Smile,
-  AtSign,
-  Paperclip,
-  ArrowUp,
 } from "lucide-react";
 import ChannelsSidebar from "@/components/ChannelsSidebar";
-
-const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
-import "react-quill-new/dist/quill.snow.css";
+import Composer from "@/components/Composer";
 import { useParams } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
-import { get_user_id } from "@/utils/auth/get_user_id";
 import { getCachedUser, loadUsers, loadUser } from "@/utils/auth/user-cache";
 
 const ChannelHeader = ({ data, members }) => (
@@ -78,10 +60,11 @@ const SimpleMessage = ({ name, time, text, color, badge }) => (
         <span className="font-semibold text-[15px]">{name}</span>
         <span className="text-[12px] text-[#8a8a8a]">{time}</span>
       </div>
-      < div
-      dangerouslySetInnerHTML={{ __html: text }}
-      className="text-[15px] font-normal leading-[1.45] tracking-[0.01em] text-[#1d1c1d] antialiased"/>
-        </div>
+      <div
+        dangerouslySetInnerHTML={{ __html: text }}
+        className="text-[15px] font-normal leading-[1.45] tracking-[0.01em] text-[#1d1c1d] antialiased"
+      />
+    </div>
   </div>
 );
 
@@ -96,201 +79,52 @@ const NewDivider = () => (
   </div>
 );
 
-const QuillToolbar = ({ onFormat, activeFormats }) => {
-  const btn = (active) =>
-    `flex items-center rounded p-0.5 ${active ? "text-[#1264A3] bg-[#1264A3]/10" : ""}`;
+const NotInChannel = ({ channelId, onJoined }) => {
+  const [joining, setJoining] = useState(false);
+  const [error, setError] = useState(null);
 
-  return (
-    <div className="flex items-center gap-3 px-2.5 py-1.5 border-b border-black/10 text-[#5a5a5a] shrink-0">
-      <button
-        type="button"
-        className={btn(activeFormats.bold)}
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={() => onFormat("bold", !activeFormats.bold)}
-      >
-        <Bold className="size-4" />
-      </button>
-      <button
-        type="button"
-        className={btn(activeFormats.italic)}
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={() => onFormat("italic", !activeFormats.italic)}
-      >
-        <Italic className="size-4" />
-      </button>
-      <button
-        type="button"
-        className={btn(activeFormats.underline)}
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={() => onFormat("underline", !activeFormats.underline)}
-      >
-        <Underline className="size-4" />
-      </button>
-      <button
-        type="button"
-        className={btn(activeFormats.strike)}
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={() => onFormat("strike", !activeFormats.strike)}
-      >
-        <Strikethrough className="size-4" />
-      </button>
-      <button
-        type="button"
-        className={btn(activeFormats.link)}
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={() => {
-          const url = window.prompt("Enter a URL");
-          if (url) onFormat("link", url);
-        }}
-      >
-        <LinkIcon className="size-4" />
-      </button>
-      <button
-        type="button"
-        className={btn(activeFormats.list === "bullet")}
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={() =>
-          onFormat("list", activeFormats.list === "bullet" ? false : "bullet")
-        }
-      >
-        <List className="size-4" />
-      </button>
-      <button
-        type="button"
-        className={btn(activeFormats.list === "ordered")}
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={() =>
-          onFormat("list", activeFormats.list === "ordered" ? false : "ordered")
-        }
-      >
-        <ListOrdered className="size-4" />
-      </button>
-      <button
-        type="button"
-        className={btn(activeFormats["code-block"])}
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={() => onFormat("code-block", !activeFormats["code-block"])}
-      >
-        <Code className="size-4" />
-      </button>
-      <div className="w-px h-4 bg-black/10" />
-    </div>
-  );
-};
+  const handleJoin = async () => {
+    setJoining(true);
+    setError(null);
+    console.log(channelId )
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/channel/join`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ channel_id: channelId }),
+        },
+      );
 
-const quillModules = { toolbar: false };
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        setError(body.message || "Failed to join channel");
+        setJoining(false);
+        return;
+      }
 
-const Composer = ({ channel_id }) => {
-  const [value, setValue] = useState("");
-  const [activeFormats, setActiveFormats] = useState({});
-  const quillRef = useRef(null);
-
-  const getEditor = () => quillRef.current?.getEditor?.() ?? null;
-
-  const refreshActiveFormats = () => {
-    const editor = getEditor();
-    if (!editor) return;
-    const range = editor.getSelection();
-    if (!range) return;
-    setActiveFormats(editor.getFormat(range));
-  };
-
-  const handleFormat = (name, value) => {
-    const editor = getEditor();
-    if (!editor) return;
-    const range = editor.getSelection() || {
-      index: editor.getLength(),
-      length: 0,
-    };
-    editor.focus();
-    editor.setSelection(range);
-    editor.format(name, value);
-    refreshActiveFormats();
-  };
-
-  const handleSend = async () => {
-    const text = value.replace(/<(.|\n)*?>/g, "").trim();
-    if (!text) return;
-    console.log("send:", value);
-    const res = await fetch("/api/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        to: channel_id,
-        message: value,
-        type: "CHANNEL",
-      }),
-    });
-
-    setValue("");
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
+      onJoined?.();
+    } catch (err) {
+      setError("Failed to join channel");
+    } finally {
+      setJoining(false);
     }
   };
 
   return (
-    <div className="mx-4 mb-10 border border-black/20 rounded-lg overflow-hidden shrink-0 flex flex-col">
-      <QuillToolbar onFormat={handleFormat} activeFormats={activeFormats} />
-      <div onKeyDown={handleKeyDown}>
-        <ReactQuill
-          ref={quillRef}
-          theme="snow"
-          value={value}
-          onChange={setValue}
-          onChangeSelection={refreshActiveFormats}
-          modules={quillModules}
-          placeholder="Message #stardance-help"
-          className="composer-quill"
-        />
-      </div>
-      <div className="flex items-center justify-between px-2.5 py-1.5 shrink-0">
-        <div className="flex items-center gap-3 text-[#5a5a5a]">
-          <Plus className="size-4" />
-          <span className="text-[15px] italic font-semibold">Aa</span>
-          <Smile className="size-4" />
-          <AtSign className="size-4" />
-          <Video className="size-4" />
-          <Mic className="size-4" />
-          <Paperclip className="size-4" />
-        </div>
-        <button
-          onClick={handleSend}
-          className="size-6 rounded bg-[#0a5a2a] flex items-center justify-center shrink-0"
-        >
-          <ArrowUp className="size-4 text-white" />
-        </button>
-      </div>
-      <style jsx global>{`
-        .composer-quill .ql-container {
-          border: none !important;
-          font-family: inherit;
-        }
-        .composer-quill .ql-editor {
-          padding: 10px 12px;
-          min-height: 24px;
-          max-height: 220px;
-          font-size: 15px;
-          line-height: 1.45;
-        }
-        .composer-quill .ql-editor.ql-blank::before {
-          color: #8a8a8a;
-          font-style: normal;
-          left: 12px;
-        }
-      `}</style>
-    </div>
-  );
-};
-const NotInChannel = () => {
-  return (
     <div className="px-3 py-2 mb-10 border border-gray-300 max-w-xl mx-auto rounded-md">
       You need to join this channel to reply
+      <button
+        className="block mx-auto bg-green-400 px-3 py-2 text-white disabled:opacity-50"
+        onClick={handleJoin}
+        disabled={joining}
+      >
+        {joining ? "Joining..." : "Join the channel"}
+      </button>
+      {error && (
+        <p className="text-center text-[13px] text-red-500 mt-1">{error}</p>
+      )}
     </div>
   );
 };
@@ -305,7 +139,7 @@ const PrivateChannelNotice = () => (
   </div>
 );
 
-const MainChannel = ({ data, members, id, messages, inChannel }) => (
+const MainChannel = ({ data, members, id, messages, inChannel, onJoined }) => (
   <div className="flex-1 min-w-0 h-screen bg-white text-black flex flex-col min-h-0">
     <ChannelHeader data={data} members={members} />
     <div className="flex-1 min-h-0 overflow-y-auto py-2">
@@ -323,7 +157,11 @@ const MainChannel = ({ data, members, id, messages, inChannel }) => (
         />
       ))}
     </div>
-    {inChannel ? <Composer channel_id={id} /> : <NotInChannel />}
+    {inChannel ? (
+      <Composer channel_id={id} />
+    ) : (
+      <NotInChannel channelId={id} onJoined={onJoined} />
+    )}
   </div>
 );
 
@@ -433,6 +271,7 @@ const Page = () => {
             members={members}
             id={params.id}
             messages={messages}
+            onJoined={() => setInChannel(true)}
           />
         )}
       </div>

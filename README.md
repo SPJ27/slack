@@ -3,3 +3,14 @@ Tech Stack (Temp)
  - Supabase (DB + Realtime)
  - Tailwind CSS
  - Hack Club Auth
+
+ TODO
+ - Add attachments
+ - Add join channels feature
+ - Add search feature
+ - Add user edit page
+ - Add user card
+ - Add threads features
+ - Add DMs
+ - Add activity
+ - Add video call feature

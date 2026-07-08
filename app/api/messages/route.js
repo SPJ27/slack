@@ -12,6 +12,7 @@ export async function POST(request) {
   }
   const { to, message, attachments, reply_to, type } = body;
   const user = await get_user();
+  console.log(user)
   const supabase = await createClient(await cookies());
   if (type == "CHANNEL") {
     const { data: userInChannel, error: userInChannelError } = await supabase
@@ -20,7 +21,6 @@ export async function POST(request) {
       .eq("user_id", user.id)
       .eq("channel_id", to)
       .single()
-    // console.log()
     if (userInChannel.length == 0) {
       return NextResponse.json({message: 'Not in channel'}, {status: 403})
     }

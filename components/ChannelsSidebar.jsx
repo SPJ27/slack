@@ -291,7 +291,7 @@ const ChannelsSidebar = () => {
       try {
         const res = await fetch("/api/user");
         const body = await res.json();
- 
+          console.log(res)
         if (!res.ok) {
           setChannelsError(body?.error || "Unable to load channels");
           return;
@@ -299,7 +299,6 @@ const ChannelsSidebar = () => {
  
         setChannels(body.data ?? []);
       } catch {
-        setChannelsError("Couldn't reach the server to load channels");
       }
     };
  
