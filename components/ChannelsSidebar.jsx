@@ -15,8 +15,9 @@ import {
   CircleCheck,
   CircleAlert,
 } from "lucide-react";
-import { useParams } from "next/navigation";
+import { redirect, useParams } from "next/navigation";
 import Link from "next/link";
+import { useRouter } from "next/router";
 
 const TopItem = ({ Icon, label, trailing }) => (
   <span className="flex mt-1.5 pl-2 font-normal text-sm font-sans items-center gap-1.5 text-[#f9edffcc]">
@@ -51,7 +52,7 @@ const Channel = ({ label, locked = false, unread = false, active = false, id }) 
   </a>
 );
 
-const CreateChannelModal = ({ onClose }) => {
+const CreateChannelModal = ({ onClose, router }) => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [visibility, setVisibility] = useState("public");
@@ -84,7 +85,7 @@ const CreateChannelModal = ({ onClose }) => {
     setStatus("loading");
     setErrorMessage("");
 
-    try {
+    // try {
       const res = await fetch("/api/channel", {
         method: "POST",
         headers: {
@@ -96,10 +97,11 @@ const CreateChannelModal = ({ onClose }) => {
           description,
         }),
       });
-
+      console.log(res)
       let payload = null;
       try {
         payload = await res.json();
+        console.log(payload)
       } catch {}
 
       if (!res.ok) {
@@ -114,20 +116,20 @@ const CreateChannelModal = ({ onClose }) => {
 
         setErrorMessage(payload?.error || fallback);
         setStatus("error");
-        return;
+        
       }
 
       setStatus("success");
-
+      router.push(`/channels/${payload.data.id}`)
       setTimeout(() => {
         onClose();
       }, 900);
-    } catch {
-      setErrorMessage(
-        "Couldn't reach the server. Check your connection and try again.",
-      );
-      setStatus("error");
-    }
+    // } catch {
+    //   setErrorMessage(
+    //     "Couldn't reach the server. Check your connection and try again.",
+    //   );
+    //   setStatus("error");
+    // }
   };
 
   return (
@@ -282,10 +284,11 @@ const CreateChannelModal = ({ onClose }) => {
   );
 };
 
-const ChannelsSidebar = () => {
+const ChannelsSidebar = ({router}) => {
   const [showModal, setShowModal] = useState(false);
   const [channels, setChannels] = useState([]);
   const params = useParams()
+  
   useEffect(() => {
      const fetchChannels = async () => {
       try {
@@ -305,14 +308,14 @@ const ChannelsSidebar = () => {
     fetchChannels();  
   }, []);
   return (
-    <div className="w-[280px] shrink-0 bg-[#5E2C5f] text-white flex flex-col font-sans select-none relative overflow-hidden">
+    <div className="w-70 pb-10 shrink-0 bg-[#5E2C5f] text-white flex flex-col font-sans select-none relative overflow-x-hidden">
       <div className="flex items-center justify-between px-4 pt-3 pb-3">
         <button className="flex items-center gap-1 text-[18px] font-semibold text-white">
           Hack Club
           <ChevronDown className="size-4" />
         </button>
         <div className="flex items-center gap-3 text-[#d1c8d3]">
-          <Settings className="size-[18px] cursor-pointer" strokeWidth={1.75} />
+          <Settings className="size-4.5 cursor-pointer" strokeWidth={1.75} />
           <SquarePen
             className="size-[18px] cursor-pointer"
             strokeWidth={1.75}
@@ -344,7 +347,7 @@ const ChannelsSidebar = () => {
         </div>
       </div>
 
-      {showModal && <CreateChannelModal onClose={() => setShowModal(false)} />}
+      {showModal && <CreateChannelModal onClose={() => setShowModal(false)} router={router}/>}
     </div>
   );
 };

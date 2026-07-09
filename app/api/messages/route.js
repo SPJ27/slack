@@ -1,4 +1,5 @@
 import { get_user } from "@/utils/auth/get_user";
+import { add_message } from "@/utils/db/message";
 import { createClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
@@ -24,14 +25,8 @@ export async function POST(request) {
       return NextResponse.json({message: 'Not in channel'}, {status: 403})
     }
   }
-  const { data, error } = await supabase.from("messages").insert({
-    from: user.id,
-    to,
-    message,
-    attachments,
-    reply_to,
-    type,
-  });
+  const { data, error } = await add_message({from: user.id, to, message, attachments, reply_to, type})
+  
   if (error) {
     return NextResponse.json(
       { message: "Unable to send message" },

@@ -1,5 +1,5 @@
 import { get_user } from "@/utils/auth/get_user";
-import { get_channel_data } from "@/utils/db/channel";
+import { add_to_channel, get_channel_data } from "@/utils/db/channel";
 import { createClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
@@ -37,10 +37,8 @@ export async function POST(req) {
       );
     }
     
-    const { error: insertError } = await supabase
-      .from("channel_members")
-      .insert({ channel_id, user_id: user.id });
-
+    const {insertError} = await add_to_channel(channel_id, user.id)
+    
     if (insertError) {
       if (insertError.code === "23505") {
         return NextResponse.json({ message: "success" }, { status: 200 });

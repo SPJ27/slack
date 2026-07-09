@@ -1,5 +1,6 @@
 import { get_user } from "@/utils/auth/get_user";
-import { get_channel_data, get_channel_members, insert_channel_data } from "@/utils/db/channel";
+import { add_to_channel, get_channel_data, get_channel_members, insert_channel_data } from "@/utils/db/channel";
+import { add_message } from "@/utils/db/message";
 import { createClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
@@ -20,8 +21,9 @@ export async function POST(request) {
       { status: 400 },
     );
   }
-
+  
   const user = await get_user();
+  console.log('user', user)
   if (!user) {
     return NextResponse.json(
       { error: "You must be signed in to create a channel" },
@@ -44,12 +46,11 @@ export async function POST(request) {
     );
   }
   const supabase = await createClient(await cookies())
-  const { error: memberError } = await supabase.from("channel_members").insert({
-    channel_id: data.id,
-    user_id: user.id,
-  });
-
-  if (memberError) {
+  const memberError  = await add_to_channel(data.id, user.id)
+  const { data: insertDefault, error: insertDefaultError } = await add_message({from: -101, to: data.id, message:`This channel was created by ${user.displayName}`, type: 'CHANNEL'})
+  console.log('data', insertDefault)
+  console.log('error',insertDefaultError)
+  if (memberError || insertDefaultError) {
     console.error("Failed to add creator as channel member:", memberError);
 
     return NextResponse.json(
@@ -62,7 +63,7 @@ export async function POST(request) {
     );
   }
 
-  return NextResponse.json({ message: "success", data }, { status: 201 });
+  return NextResponse.json({ message: "success", data }, { status: 200 });
 }
 
 export async function GET(request) {

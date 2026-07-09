@@ -5,7 +5,6 @@ import { cookies } from "next/headers";
 export async function get_user() {
   const cookieStore = await cookies();
   const session_id = cookieStore.get("session_id")?.value;
-  console.log(session_id)
   if (!session_id) return null;
 
   const supabase = await createClient(cookieStore);
@@ -14,7 +13,7 @@ export async function get_user() {
     .select("user_id")
     .eq("session_id", session_id)
     .maybeSingle();
-
+  console.log('sessionError', sessionError)
   if (sessionError || !session) return null;
 
   const { data: user, error: userError } = await supabase
@@ -22,7 +21,7 @@ export async function get_user() {
     .select("*")
     .eq("id", session.user_id)
     .maybeSingle();
-
+  console.log('userError', userError)
   if (userError) return null;
   return user;
 }

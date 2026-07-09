@@ -13,9 +13,10 @@ import {
 } from "lucide-react";
 import ChannelsSidebar from "@/components/ChannelsSidebar";
 import Composer from "@/components/Composer";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { getCachedUser, loadUsers, loadUser } from "@/utils/auth/user-cache";
+import Image from "next/image";
 
 const ChannelHeader = ({ data, members }) => (
   <div className="h-14 shrink-0 border-b border-black/10 flex items-center px-4 justify-between">
@@ -48,13 +49,13 @@ const ChannelHeader = ({ data, members }) => (
   </div>
 );
 
-const Avatar = ({ color }) => (
-  <div className={`size-9 mt-1 rounded-md ${color} shrink-0`} />
+const Avatar = ({ pfp = 'https://i.pinimg.com/736x/b8/f7/07/b8f707b74374a8f4f78e99edab91fa05.jpg' }) => (
+  <Image src={pfp} className="size-5" width={9} height={9}/>
 );
 
-const SimpleMessage = ({ name, time, text, color, badge }) => (
+const SimpleMessage = ({ name, time, text, pfp }) => (
   <div className="flex gap-2 px-4 py-1  hover:bg-black/[0.03]">
-    <Avatar color={color} />
+    <Avatar pfp={pfp} />
     <div className="min-w-0">
       <div className="flex items-baseline gap-2">
         <span className="font-semibold text-[15px]">{name}</span>
@@ -86,7 +87,7 @@ const NotInChannel = ({ channelId, onJoined }) => {
   const handleJoin = async () => {
     setJoining(true);
     setError(null);
-    console.log(channelId )
+    console.log(channelId);
     try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/channel/join`,
@@ -153,7 +154,7 @@ const MainChannel = ({ data, members, id, messages, inChannel, onJoined }) => (
             minute: "2-digit",
           })}
           text={m.message}
-          color="bg-sky-300"
+          pfp={getCachedUser(m.from)?.profilePicture ?? ""}
         />
       ))}
     </div>
@@ -174,6 +175,7 @@ const Page = () => {
   const [inChannel, setInChannel] = useState(false);
   const [loading, setLoading] = useState(true);
   const [, forceRerender] = useState(0);
+  const router = useRouter();
 
   useEffect(() => {
     let cancelled = false;
@@ -259,9 +261,10 @@ const Page = () => {
   }, [params.id]);
 
   return (
-    <div className="w-full flex flex-col font-sans overflow-hidden">
+    <div className="w-full h-screen flex flex-col font-sans overflow-hidden">
+      {" "}
       <div className="flex-1 flex min-h-0">
-        <ChannelsSidebar />
+        <ChannelsSidebar router={router} />
         {!loading && isPrivate ? (
           <PrivateChannelNotice />
         ) : (

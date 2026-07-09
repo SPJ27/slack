@@ -4,6 +4,11 @@ const cache = new Map();
 const inFlight = new Map();
 
 export function getCachedUser(uid) {
+  console.log('uid', uid)
+  if (uid === -101){
+    return {displayName: 'Slack Info'}
+  }
+  console.log('cache', cache.get(uid))
   return cache.get(uid);
 }
 

@@ -7,6 +7,7 @@ Tech Stack (Temp)
  TODO
  - Add attachments
  - Add search feature
+ - Add ability to add users manually, and private channels 
  - Add user edit page
  - Add user card
  - Add threads features
