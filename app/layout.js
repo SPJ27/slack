@@ -1,6 +1,7 @@
 import { Lato } from "next/font/google";
 import "./globals.css";
 import Sidebar from "@/components/Sidebar";
+import TopBar from "@/components/TopBar";
 
 const lato = Lato({
   subsets: ['latin'],
@@ -20,7 +21,7 @@ export default function RootLayout({ children }) {
         <div className="flex h-full overflow-hidden">
           <Sidebar />
           <div className="flex-1">
-            <div className="min-h-8 bg-[#481349]">a</div>
+            <TopBar />
             {children}
           </div>
         </div>
