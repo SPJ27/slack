@@ -49,11 +49,11 @@ const ChannelHeader = ({ data, members }) => (
   </div>
 );
 
-const Avatar = ({ pfp = 'https://i.pinimg.com/736x/b8/f7/07/b8f707b74374a8f4f78e99edab91fa05.jpg' }) => (
-  <Image src={pfp} className="size-5" width={9} height={9}/>
+const Avatar = ({ pfp = 'https://images.seeklogo.com/logo-png/49/2/slack-logo-png_seeklogo-496177.png' }) => (
+  <Image alt='pfp' src={pfp} className="size-8 mt-1 rounded-lg" width={9} height={9}/>
 );
 
-const SimpleMessage = ({ name, time, text, pfp }) => (
+const SimpleMessage = ({ name, time, text, pfp, special }) => (
   <div className="flex gap-2 px-4 py-1  hover:bg-black/[0.03]">
     <Avatar pfp={pfp} />
     <div className="min-w-0">
@@ -61,10 +61,13 @@ const SimpleMessage = ({ name, time, text, pfp }) => (
         <span className="font-semibold text-[15px]">{name}</span>
         <span className="text-[12px] text-[#8a8a8a]">{time}</span>
       </div>
-      <div
+      {!special ? <div
         dangerouslySetInnerHTML={{ __html: text }}
         className="text-[15px] font-normal leading-[1.45] tracking-[0.01em] text-[#1d1c1d] antialiased"
-      />
+      /> :
+      <div className="text-neutral-500">
+        {text}
+        </div>}
     </div>
   </div>
 );
@@ -145,18 +148,22 @@ const MainChannel = ({ data, members, id, messages, inChannel, onJoined }) => (
     <ChannelHeader data={data} members={members} />
     <div className="flex-1 min-h-0 overflow-y-auto py-2">
       <NewDivider />
-      {messages.map((m) => (
+      {messages.map((m) => {
+        const cachedUser = getCachedUser(m.from)
+        // console.log('m.id', m.id)
+        return (
         <SimpleMessage
           key={m.id}
-          name={getCachedUser(m.from)?.displayName ?? "..."}
+          name={cachedUser?.displayName ?? "..."}
           time={new Date(m.created_at).toLocaleTimeString([], {
             hour: "numeric",
             minute: "2-digit",
           })}
           text={m.message}
-          pfp={getCachedUser(m.from)?.profilePicture ?? ""}
+          pfp={cachedUser?.profilePicture}
+          special={m.from === -101}
         />
-      ))}
+      )})}
     </div>
     {inChannel ? (
       <Composer channel_id={id} />
