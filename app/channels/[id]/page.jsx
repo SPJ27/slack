@@ -150,7 +150,6 @@ const MainChannel = ({ data, members, id, messages, inChannel, onJoined }) => (
       <NewDivider />
       {messages.map((m) => {
         const cachedUser = getCachedUser(m.from)
-        // console.log('m.id', m.id)
         return (
         <SimpleMessage
           key={m.id}

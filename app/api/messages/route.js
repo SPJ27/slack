@@ -25,7 +25,7 @@ export async function POST(request) {
       return NextResponse.json({message: 'Not in channel'}, {status: 403})
     }
   }
-  const { data, error } = await add_message({from: user.id, to, message, attachments, reply_to, type})
+  const { error } = await add_message({from: user.id, to, message, attachments, reply_to, type})
   
   if (error) {
     return NextResponse.json(

@@ -25,7 +25,7 @@ export async function POST(req) {
 
     const supabase = await createClient(await cookies());
 
-    const { data: channel, error: channelError } = await get_channel_data()
+    const { data: channel, error: channelError } = await get_channel_data(channel_id)
     if (channelError || !channel) {
       return NextResponse.json({ message: "channel not found" }, { status: 404 });
     }
@@ -37,7 +37,7 @@ export async function POST(req) {
       );
     }
     
-    const {insertError} = await add_to_channel(channel_id, user.id)
+    const insertError = await add_to_channel(channel_id, user.id)
     
     if (insertError) {
       if (insertError.code === "23505") {
