@@ -1,5 +1,5 @@
 'use client'
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import {
   Mic,
@@ -105,8 +105,6 @@ const QuillToolbar = ({ onFormat, activeFormats }) => {
   );
 };
 
-const quillModules = { toolbar: false };
-
 const Composer = ({ channel_id }) => {
   const [value, setValue] = useState("");
   const [activeFormats, setActiveFormats] = useState({});
@@ -153,7 +151,28 @@ const Composer = ({ channel_id }) => {
 
     setValue("");
   };
+useEffect(() => {
+  const editor = quillRef.current?.getEditor();
+  if (!editor) return;
 
+  const binding = editor.keyboard.addBinding(
+    { key: 13, shiftKey: null },
+    (range, context) => {
+      if (context.shiftKey) return true;
+
+      handleSend();
+      return false;
+    }
+  );
+
+  return () => {
+    if (binding) {
+      editor.keyboard.bindings[13] = editor.keyboard.bindings[13].filter(
+        (b) => b !== binding
+      );
+    }
+  };
+}, [handleSend]);
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -161,6 +180,9 @@ const Composer = ({ channel_id }) => {
     }
   };
 
+ const quillModules = {
+    toolbar: false,
+  };
   return (
     <div className="mx-4 mb-10 border border-black/20 rounded-lg overflow-hidden shrink-0 flex flex-col">
       <QuillToolbar onFormat={handleFormat} activeFormats={activeFormats} />

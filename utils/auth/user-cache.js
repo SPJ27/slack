@@ -8,7 +8,6 @@ export function getCachedUser(uid) {
   if (uid === -101){
     return {displayName: 'Slack Info',profilePicture: 'https://i.pinimg.com/736x/7d/d6/17/7dd61762f78848ecef51f5c2e58add0d.jpg' }
   }
-  console.log('cache', cache.get(uid))
   return cache.get(uid);
 }
 
