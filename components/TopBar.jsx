@@ -2,6 +2,7 @@
 
 import { Search } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import Link from 'next/link'
 
 export default function TopBar() {
   const [query, setQuery] = useState("");
@@ -40,7 +41,7 @@ export default function TopBar() {
 
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/search/users/?query=${encodeURIComponent(query)}`
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/search/channels/?query=${encodeURIComponent(query)}`
         );
 
         const data = await res.json();
@@ -74,25 +75,26 @@ export default function TopBar() {
           </div>
 
           {(loading || results.length > 0) && (
-            <div className="absolute left-0 right-0 mt-2 rounded-sm bg-[#4b044b] border border-white/10 shadow-xl overflow-hidden z-50">
+            <div className="absolute left-0 right-0 mt-2 rounded-sm bg-[#5E2C5f] border border-white/10 shadow-xl overflow-hidden z-50">
               {loading ? (
                 <div className="p-3 text-sm text-gray-400">
                   Searching...
                 </div>
               ) : (
-                results.map((user) => (
-                  <button
-                    key={user.id}
-                    className="w-full px-3 py-2 flex items-center gap-3 hover:bg-white/10 text-left"
+                results.map((channel) => (
+                  <Link
+                    href={`/channels/${channel.id}`}
+                    key={channel.name}
+                    className="w-full px-3 py-1 flex items-center gap-3 hover:bg-white/10 text-left"
                   >
-                    <img
+                    {/* <img
                       src={user.profilePicture}
                       alt=""
                       className="w-8 h-8 rounded-md"
-                    />
+                    /> */}
 
-                    <span>{user.displayName}</span>
-                  </button>
+                    <span className="text-neutral-300 font-medium"># {channel.name}</span>
+                  </Link>
                 ))
               )}
             </div>

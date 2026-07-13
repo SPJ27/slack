@@ -9,8 +9,6 @@ Tech Stack (Temp)
  - Add search feature
  - Add ability to add users manually, and private channels 
  - Add user edit page
- - Add user card
- - Add threads features
  - Add DMs
  - Add activity
  - Add video call feature
