@@ -1,9 +1,39 @@
 "use client";
 
-import { Search } from "lucide-react";
+import { Hash, Search, Lock } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import Link from 'next/link'
+import Link from "next/link";
+import Image from "next/image";
+const Channel = ({ label, profilePicture, hash, id, isPublic = true }) => (
+  <Link
+    href={hash ? `/channels/${id}` : `/dm/${id}`}
+    className="mx-2 flex items-center gap-3 rounded-md px-3 py-2 transition-colors hover:bg-white/10"
+  >
+    {hash ? (
+      <div className="flex h-8 w-8 items-center justify-center rounded-sm bg-white/10">
+        {isPublic ? (
+          <Hash className="size-4 text-neutral-300" />
+        ) : (
+          <Lock className="size-4 text-neutral-300" />
+        )}
+      </div>
+    ) : (
+      <Image
+        src={profilePicture}
+        alt={label}
+        width={32}
+        height={32}
+        className="size-8 rounded-sm object-cover"
+      />
+    )}
 
+    <div className="min-w-0 flex-1">
+      <p className="truncate text-sm font-medium text-white">{label}</p>
+
+      <p className="text-xs text-neutral-400">{hash ? "Channel" : "User"}</p>
+    </div>
+  </Link>
+);
 export default function TopBar() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
@@ -21,8 +51,7 @@ export default function TopBar() {
 
     window.addEventListener("mousedown", handleClickOutside);
 
-    return () =>
-      window.removeEventListener("mousedown", handleClickOutside);
+    return () => window.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   useEffect(() => {
@@ -41,7 +70,7 @@ export default function TopBar() {
 
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/search/channels/?query=${encodeURIComponent(query)}`
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/search/general/?query=${encodeURIComponent(query)}`,
         );
 
         const data = await res.json();
@@ -59,10 +88,7 @@ export default function TopBar() {
   return (
     <div className="h-10 shrink-0 bg-[#481349] flex items-center px-3 text-white">
       <div className="flex-1 flex justify-center">
-        <div
-          ref={wrapperRef}
-          className="relative w-[420px]"
-        >
+        <div ref={wrapperRef} className="relative w-[420px]">
           <div className="flex items-center gap-2 bg-white/10 hover:bg-white/15 rounded-md px-3 py-1.5">
             <Search className="size-4 shrink-0" />
 
@@ -75,27 +101,21 @@ export default function TopBar() {
           </div>
 
           {(loading || results.length > 0) && (
-            <div className="absolute left-0 right-0 mt-2 rounded-sm bg-[#5E2C5f] border border-white/10 shadow-xl overflow-hidden z-50">
+            <div className="absolute py-2 left-0 right-0 mt-2 rounded-sm bg-[#5E2C5f] border border-white/10 shadow-xl overflow-hidden z-50">
               {loading ? (
-                <div className="p-3 text-sm text-gray-400">
-                  Searching...
-                </div>
+                <div className="p-3 text-sm text-gray-400">Searching...</div>
               ) : (
-                results.map((channel) => (
-                  <Link
-                    href={`/channels/${channel.id}`}
-                    key={channel.name}
-                    className="w-full px-3 py-1 flex items-center gap-3 hover:bg-white/10 text-left"
-                  >
-                    {/* <img
-                      src={user.profilePicture}
-                      alt=""
-                      className="w-8 h-8 rounded-md"
-                    /> */}
-
-                    <span className="text-neutral-300 font-medium"># {channel.name}</span>
-                  </Link>
-                ))
+                results
+                  .slice(0, 7)
+                  .map((item) => (
+                    <Channel
+                      key={item.id}
+                      hash={item.type == "channel"}
+                      label={item.name || item.displayName}
+                      id={item.id}
+                      profilePicture={item?.profilePicture}
+                    />
+                  ))
               )}
             </div>
           )}

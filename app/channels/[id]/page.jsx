@@ -41,13 +41,7 @@ const ChannelHeader = ({ data, members }) => (
         }
       </div>
       <span className="text-[13px] text-[#8a8a8a]">{members.length}</span>
-      <div className="flex items-center gap-1 text-[#8a8a8a]">
-        <Headphones className="size-4" />
-        <ChevronDown className="size-3.5" />
-      </div>
-      <Bell className="size-4 text-[#8a8a8a]" />
-      <Search className="size-4 text-[#8a8a8a]" />
-      <MoreVertical className="size-4 text-[#8a8a8a]" />
+      <MoreVertical className="size-4 text-[#8a8a8a] cursor-pointer" />
     </div>
   </div>
 );
