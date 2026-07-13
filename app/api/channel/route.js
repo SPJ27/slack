@@ -107,3 +107,9 @@ export async function GET(request) {
 
   return NextResponse.json({ data, members, inChannel }, { status: 200 });
 }
+
+// export async function DELETE(request){
+//   const user = await get_user()
+//   const headers = request.headers
+//   const channel_id = headers.get('channel_id')
+// }

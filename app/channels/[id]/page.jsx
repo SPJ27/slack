@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import UserHoverCard from "@/components/UserHoverCard";
 import {
   ChevronDown,
   Headphones,
@@ -49,25 +50,48 @@ const ChannelHeader = ({ data, members }) => (
   </div>
 );
 
-const Avatar = ({ pfp = 'https://images.seeklogo.com/logo-png/49/2/slack-logo-png_seeklogo-496177.png' }) => (
-  <Image alt='pfp' src={pfp} className="size-8 mt-1 rounded-lg" width={9} height={9} />
+const Avatar = ({
+  pfp = "https://images.seeklogo.com/logo-png/49/2/slack-logo-png_seeklogo-496177.png",
+}) => (
+  <Image
+    alt="pfp"
+    src={pfp}
+    className="size-8 mt-1 rounded-md"
+    width={9}
+    height={9}
+  />
 );
 
-const SimpleMessage = ({ name, time, text, pfp, special, isSame }) => (
+const SimpleMessage = ({ name, time, text, pfp, special, isSame, user }) => (
   <div className="flex gap-2 px-4 py-1  hover:bg-black/[0.03]">
-    {!isSame ? <Avatar pfp={pfp} /> : <div className="ml-8" />}
+    {!isSame ? (
+      <UserHoverCard user={user}>
+        <div>
+          <Avatar pfp={pfp} />
+        </div>
+      </UserHoverCard>
+    ) : (
+      <div className="ml-8" />
+    )}
     <div className="min-w-0">
-      {!isSame && <div className="flex items-baseline gap-2">
-        <span className="font-semibold text-[15px]">{name}</span>
-        <span className="text-[12px] text-[#8a8a8a]">{time}</span>
-      </div>}
-      {!special ? <div
-        dangerouslySetInnerHTML={{ __html: text }}
-        className="text-[15px] font-normal leading-[1.45] tracking-[0.01em] text-[#1d1c1d] antialiased"
-      /> :
-        <div className="text-neutral-500 text-sm">
-          {text}
-        </div>}
+      {!isSame && (
+        <div className="flex items-baseline gap-2">
+          <UserHoverCard user={user}>
+            <span className="font-semibold text-[15px] cursor-pointer hover:underline">
+              {name}
+            </span>
+          </UserHoverCard>
+          <span className="text-[12px] text-[#8a8a8a]">{time}</span>
+        </div>
+      )}
+      {!special ? (
+        <div
+          dangerouslySetInnerHTML={{ __html: text }}
+          className="text-[15px] font-normal leading-[1.45] tracking-[0.01em] text-[#1d1c1d] antialiased"
+        />
+      ) : (
+        <div className="text-neutral-500 text-sm">{text}</div>
+      )}
     </div>
   </div>
 );
@@ -149,21 +173,20 @@ const MainChannel = ({ data, members, id, messages, inChannel, onJoined }) => (
     <div className="flex-1 min-h-0 overflow-y-auto py-2">
       <NewDivider />
       {messages.map((m, i) => {
-        const cachedUser = getCachedUser(m.from)
-        const prev = messages[i > 1 ? i - 1 : 0]
-        const prevUser = getCachedUser(prev.from)
+        const cachedUser = getCachedUser(m.from);
+        const prev = messages[i > 1 ? i - 1 : 0];
+        const prevUser = getCachedUser(prev.from);
         const fiveMinutesEarlier = new Date(
-          new Date(m.created_at).getTime() - 2 * 60 * 1000
+          new Date(m.created_at).getTime() - 2 * 60 * 1000,
         );
-        const prevTime = new Date(
-          new Date(prev.created_at).getTime()
-        );
-        console.log(i)
-        console.log(fiveMinutesEarlier)
-        console.log(prevTime)
+        const prevTime = new Date(new Date(prev.created_at).getTime());
+        console.log(i);
+        console.log(fiveMinutesEarlier);
+        console.log(prevTime);
         return (
           <SimpleMessage
             key={m.id}
+            user={cachedUser}
             name={cachedUser?.displayName ?? "..."}
             time={new Date(m.created_at).toLocaleTimeString([], {
               hour: "numeric",
@@ -172,9 +195,13 @@ const MainChannel = ({ data, members, id, messages, inChannel, onJoined }) => (
             text={m.message}
             pfp={cachedUser?.profilePicture}
             special={m.from === -101}
-            isSame={cachedUser?.id == prevUser?.id && fiveMinutesEarlier < prevTime && i!==0}
+            isSame={
+              cachedUser?.id == prevUser?.id &&
+              fiveMinutesEarlier < prevTime &&
+              i !== 0
+            }
           />
-        )
+        );
       })}
     </div>
     {inChannel ? (

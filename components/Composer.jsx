@@ -184,7 +184,7 @@ useEffect(() => {
     toolbar: false,
   };
   return (
-    <div className="mx-4 mb-10 border border-black/20 rounded-lg overflow-hidden shrink-0 flex flex-col">
+    <div className="mx-4 mb-12 border border-black/20 rounded-lg overflow-hidden shrink-0 flex flex-col">
       <QuillToolbar onFormat={handleFormat} activeFormats={activeFormats} />
       <div onKeyDown={handleKeyDown}>
         <ReactQuill

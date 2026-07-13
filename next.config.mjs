@@ -10,6 +10,10 @@ const nextConfig = {
         protocol: "https",
         hostname: "images.seeklogo.com",
       },
+      {
+        protocol: "https",
+        hostname: "ca.slack-edge.com",
+      },
     ],
   },
 };
