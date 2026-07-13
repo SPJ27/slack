@@ -35,8 +35,10 @@ const ChannelHeader = ({ data, members }) => (
     </div>
     <div className="flex items-center gap-4 shrink-0">
       <div className="flex items-center -space-x-2">
-        <div className="size-6 rounded-md bg-amber-700 border-2 border-[#1a1d21]" />
-        <div className="size-6 rounded-md bg-emerald-700 border-2 border-[#1a1d21]" />
+        {members[0] && <Image alt='pfp' src={members[0].profilePicture} width={9} height={9} className="size-6 rounded-md bg-amber-700 border-2 border-[#1a1d21]" />
+        }
+        {members[1] && <Image alt='pfp' src={members[1].profilePicture} width={9} height={9} className="size-6 rounded-md bg-amber-700 border-2 border-[#1a1d21]" />
+        }
       </div>
       <span className="text-[13px] text-[#8a8a8a]">{members.length}</span>
       <div className="flex items-center gap-1 text-[#8a8a8a]">
@@ -305,7 +307,7 @@ const Page = () => {
       if (channel) supabase.removeChannel(channel);
     };
   }, [params.id]);
-
+  console.log(members)
   return (
     <div className="w-full h-screen flex flex-col font-sans overflow-hidden">
       {" "}
