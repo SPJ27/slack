@@ -50,14 +50,22 @@ export async function add_to_channel(channel_id, user_id) {
   return insertError;
 }
 
-
 export async function search_channels(search) {
   const supabase = await createClient(await cookies());
   const { data, error } = await supabase
     .from("channels")
     .select("id, name")
-    .eq('isPublic', true)
+    .eq("isPublic", true)
     .ilike("name", `%${search}%`)
     .limit(20);
+  return { data, error };
+}
+
+export async function remove_channel(channel_id) {
+  const supabase = await createClient(await cookies());
+  const { data, error } = await supabase
+    .from("channels")
+    .delete()
+    .eq("id", channel_id)
   return { data, error };
 }

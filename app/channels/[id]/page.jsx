@@ -1,16 +1,17 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import UserHoverCard from "@/components/UserHoverCard";
 import {
   ChevronDown,
-  Headphones,
   Star,
   Hash,
   Lock,
-  Search,
-  Bell,
   MoreVertical,
   Link as LinkIcon,
+  Settings,
+  UserPlus,
+  Trash2,
+  LogOut,
 } from "lucide-react";
 import ChannelsSidebar from "@/components/ChannelsSidebar";
 import Composer from "@/components/Composer";
@@ -19,32 +20,132 @@ import { createClient } from "@/utils/supabase/client";
 import { getCachedUser, loadUsers, loadUser } from "@/utils/auth/user-cache";
 import Image from "next/image";
 
-const ChannelHeader = ({ data, members }) => (
-  <div className="h-14 shrink-0 border-b border-black/10 flex items-center px-4 justify-between">
-    <div className="flex items-center gap-2 min-w-0">
-      <Star className="size-4 text-[#8a8a8a] shrink-0" />
-      <span className="font-bold text-[17px] flex items-center gap-1 shrink-0">
-        {data.isPublic ? (
-          <Hash className="size-4" />
-        ) : (
-          <Lock className="size-4" />
-        )}{" "}
-        {data?.name}
-      </span>
-      <span className="text-neutral-500  text-[14px] ">{data.description}</span>
-    </div>
-    <div className="flex items-center gap-4 shrink-0">
-      <div className="flex items-center -space-x-2">
-        {members[0] && <Image alt='pfp' src={members[0].profilePicture} width={9} height={9} className="size-6 rounded-md bg-amber-700 border-2 border-[#1a1d21]" />
-        }
-        {members[1] && <Image alt='pfp' src={members[1].profilePicture} width={9} height={9} className="size-6 rounded-md bg-amber-700 border-2 border-[#1a1d21]" />
-        }
+const ChannelHeader = ({ data, members, id }) => {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div className="h-14 shrink-0 border-b border-black/10 flex items-center px-4 justify-between">
+      <div className="flex items-center gap-2 min-w-0">
+        <Star className="size-4 text-[#8a8a8a] shrink-0" />
+
+        <span className="font-bold text-[17px] flex items-center gap-1 shrink-0">
+          {data.isPublic ? (
+            <Hash className="size-4" />
+          ) : (
+            <Lock className="size-4" />
+          )}
+          {data?.name}
+        </span>
+
+        <span className="text-neutral-500 text-[14px]">{data.description}</span>
       </div>
-      <span className="text-[13px] text-[#8a8a8a]">{members.length}</span>
-      <MoreVertical className="size-4 text-[#8a8a8a] cursor-pointer" />
+
+      <div className="flex items-center gap-4 shrink-0">
+        <div className="flex items-center -space-x-2">
+          {members[0] && (
+            <Image
+              alt="pfp"
+              src={members[0].profilePicture}
+              width={9}
+              height={9}
+              className="size-6 rounded-md border-2 border-[#1a1d21]"
+            />
+          )}
+
+          {members[1] && (
+            <Image
+              alt="pfp"
+              src={members[1].profilePicture}
+              width={9}
+              height={9}
+              className="size-6 rounded-md border-2 border-[#1a1d21]"
+            />
+          )}
+        </div>
+
+        <span className="text-[13px] text-[#8a8a8a]">{members.length}</span>
+
+        <div ref={menuRef} className="relative">
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="rounded-md p-1 hover:bg-black/5 transition"
+          >
+            <MoreVertical className="size-4 text-[#8a8a8a]" />
+          </button>
+
+          {menuOpen && (
+            <div className="absolute py-1 right-0 top-full mt-2 w-56 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xl z-50">
+              <button className="flex w-full items-center gap-3 px-4 py-2 text-sm hover:bg-gray-100">
+                <UserPlus className="size-4" />
+                Invite people
+              </button>
+
+              <button className="flex w-full items-center gap-3 px-4 py-2 text-sm hover:bg-gray-100">
+                <Settings className="size-4" />
+                Channel settings
+              </button>
+
+              <button className="flex w-full items-center gap-3 px-4 py-2 text-sm hover:bg-gray-100">
+                <LinkIcon className="size-4" />
+                Copy channel link
+              </button>
+
+              <div className="border-t" />
+
+              <button className="flex w-full items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                <LogOut className="size-4" />
+                Leave channel
+              </button>
+
+              <button
+                onClick={async () => {
+                  if (!confirm("Are you sure you want to delete this channel?"))
+                    return;
+
+                  try {
+                    const res = await fetch(
+                      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/channel`,
+                      {
+                        method: "DELETE",
+                        headers: {channel_id: id}
+                      },
+                    );
+
+                    if (!res.ok) {
+                      const body = await res.json().catch(() => ({}));
+                      alert(body.message || "Failed to delete channel");
+                      return;
+                    }
+
+                    window.location.href = "/";
+                  } catch (err) {
+                    alert("Something went wrong");
+                  }
+                }}
+                className="flex w-full items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+              >
+                <Trash2 className="size-4" />
+                Delete channel
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const Avatar = ({
   pfp = "https://images.seeklogo.com/logo-png/49/2/slack-logo-png_seeklogo-496177.png",
@@ -165,7 +266,7 @@ const PrivateChannelNotice = () => (
 
 const MainChannel = ({ data, members, id, messages, inChannel, onJoined }) => (
   <div className="flex-1 min-w-0 h-screen bg-white text-black flex flex-col min-h-0">
-    <ChannelHeader data={data} members={members} />
+    <ChannelHeader data={data} members={members} id={id}/>
     <div className="flex-1 min-h-0 overflow-y-auto py-2">
       <NewDivider />
       {messages.map((m, i) => {
@@ -301,7 +402,7 @@ const Page = () => {
       if (channel) supabase.removeChannel(channel);
     };
   }, [params.id]);
-  console.log(members)
+  console.log(members);
   return (
     <div className="w-full h-screen flex flex-col font-sans overflow-hidden">
       {" "}
