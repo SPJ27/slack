@@ -1,5 +1,6 @@
 import { get_user } from "@/utils/auth/get_user";
 import { add_to_channel, get_channel_data } from "@/utils/db/channel";
+import { add_message } from "@/utils/db/message";
 import { createClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
@@ -47,6 +48,13 @@ export async function POST(req) {
       return NextResponse.json({ message: "failed to join channel" }, { status: 500 });
     }
 
+    const { data: insertDefault, error: insertDefaultError } =
+      await add_message({
+        from: -101,
+        to: channel_id,
+        message: `${user.displayName} joined this channel`,
+        type: "CHANNEL",
+      });
     return NextResponse.json({ message: "success" }, { status: 200 });
   } catch (err) {
     console.error("Unexpected error in join-channel route:", err);

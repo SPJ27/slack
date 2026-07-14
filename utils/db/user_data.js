@@ -10,3 +10,13 @@ export async function search_users(search) {
     .limit(20);
   return { data, error };
 }
+
+export async function remove_from_channel(channel_id, user_id) {
+  const supabase = createClient(await cookies());
+  const { data, error } = await supabase
+    .from("channel_members")
+    .delete()
+    .eq('channel_id', channel_id)
+    .eq('user_id', user_id)
+  return { data, error };
+}

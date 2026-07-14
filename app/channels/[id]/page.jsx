@@ -104,7 +104,31 @@ const ChannelHeader = ({ data, members, id }) => {
 
               <div className="border-t" />
 
-              <button className="flex w-full items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+              <button onClick={async () => {
+                  if (!confirm("Are you sure you want to leave this channel?"))
+                    return;
+
+                  try {
+                    const res = await fetch(
+                      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/channel/leave`,
+                      {
+                        method: "DELETE",
+                        headers: {channel_id: id}
+                      },
+                    );
+
+                    if (!res.ok) {
+                      const body = await res.json().catch(() => ({}));
+                      alert(body.message || "Failed to leave channel");
+                      return;
+                    }
+
+                    window.location.href = "/";
+                  } catch (err) {
+                    alert("Something went wrong");
+                  }
+                }}
+                 className="flex w-full items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50">
                 <LogOut className="size-4" />
                 Leave channel
               </button>
