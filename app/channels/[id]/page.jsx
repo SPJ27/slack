@@ -123,7 +123,7 @@ const ChannelHeader = ({ data, members, id }) => {
                       return;
                     }
 
-                    window.location.href = "/";
+                    window.location.href = "/channels";
                   } catch (err) {
                     alert("Something went wrong");
                   }
@@ -153,7 +153,7 @@ const ChannelHeader = ({ data, members, id }) => {
                       return;
                     }
 
-                    window.location.href = "/";
+                    window.location.href = "/channels";
                   } catch (err) {
                     alert("Something went wrong");
                   }
