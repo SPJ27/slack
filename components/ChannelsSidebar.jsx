@@ -1,3 +1,4 @@
+'use client'
 import { useState, useRef, useEffect, useDebugValue } from "react";
 import {
   Settings,
@@ -15,9 +16,8 @@ import {
   CircleCheck,
   CircleAlert,
 } from "lucide-react";
-import { redirect, useParams } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { useRouter } from "next/router";
 
 const TopItem = ({ Icon, label, trailing }) => (
   <span className="flex mt-1.5 pl-2 font-normal text-sm font-sans items-center gap-1.5 text-[#f9edffcc]">
@@ -33,7 +33,7 @@ const SectionHeader = ({ label }) => (
 );
 
 const Channel = ({ label, locked = false, unread = false, active = false, id }) => (
-  <a  
+  <Link  
   href={`/channels/${id}`}
     className={`flex items-center gap-2 pl-6 pr-2 py-0.5 rounded-md cursor-pointer text-[15px] ${
       active
@@ -49,7 +49,7 @@ const Channel = ({ label, locked = false, unread = false, active = false, id }) 
       <Hash className="size-[15px] shrink-0" strokeWidth={2} />
     )}
     <span className="truncate">{label}</span>
-  </a>
+  </Link>
 );
 
 const CreateChannelModal = ({ onClose, router }) => {
@@ -284,11 +284,11 @@ const CreateChannelModal = ({ onClose, router }) => {
   );
 };
 
-const ChannelsSidebar = ({router}) => {
+const ChannelsSidebar = () => {
   const [showModal, setShowModal] = useState(false);
   const [channels, setChannels] = useState([]);
   const params = useParams()
-  
+  const router = useRouter()
   useEffect(() => {
      const fetchChannels = async () => {
       try {

@@ -16,15 +16,9 @@ const Home = () => (
 );
 
 const Page = () => {
-  const router = useRouter();
   return (
-    <div className="w-full h-screen flex flex-col font-sans overflow-hidden">
-      {" "}
-      <div className="flex-1 flex min-h-0">
-        <ChannelsSidebar router={router} />
         <Home />
-      </div>
-    </div>
+   
   );
 };
 export default Page;

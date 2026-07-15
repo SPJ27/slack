@@ -13,9 +13,8 @@ import {
   Trash2,
   LogOut,
 } from "lucide-react";
-import ChannelsSidebar from "@/components/ChannelsSidebar";
 import Composer from "@/components/Composer";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { getCachedUser, loadUsers, loadUser } from "@/utils/auth/user-cache";
 import Image from "next/image";
@@ -104,7 +103,8 @@ const ChannelHeader = ({ data, members, id }) => {
 
               <div className="border-t" />
 
-              <button onClick={async () => {
+              <button
+                onClick={async () => {
                   if (!confirm("Are you sure you want to leave this channel?"))
                     return;
 
@@ -113,7 +113,7 @@ const ChannelHeader = ({ data, members, id }) => {
                       `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/channel/leave`,
                       {
                         method: "DELETE",
-                        headers: {channel_id: id}
+                        headers: { channel_id: id },
                       },
                     );
 
@@ -128,7 +128,8 @@ const ChannelHeader = ({ data, members, id }) => {
                     alert("Something went wrong");
                   }
                 }}
-                 className="flex w-full items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                className="flex w-full items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+              >
                 <LogOut className="size-4" />
                 Leave channel
               </button>
@@ -143,7 +144,7 @@ const ChannelHeader = ({ data, members, id }) => {
                       `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/channel`,
                       {
                         method: "DELETE",
-                        headers: {channel_id: id}
+                        headers: { channel_id: id },
                       },
                     );
 
@@ -263,7 +264,7 @@ const NotInChannel = ({ channelId, onJoined }) => {
 
   return (
     <div className="px-6 py-3 mb-13 border text-lg border-gray-400 max-w-xl mx-auto rounded-md">
-      You need to join this channel to reply :) 
+      You need to join this channel to reply :)
       <button
         className="block text-sm mx-auto bg-green-700 px-3 py-1 mt-1 text-white disabled:opacity-50"
         onClick={handleJoin}
@@ -290,7 +291,7 @@ const PrivateChannelNotice = () => (
 
 const MainChannel = ({ data, members, id, messages, inChannel, onJoined }) => (
   <div className="flex-1 min-w-0 h-screen bg-white text-black flex flex-col min-h-0">
-    <ChannelHeader data={data} members={members} id={id}/>
+    <ChannelHeader data={data} members={members} id={id} />
     <div className="flex-1 min-h-0 overflow-y-auto py-2">
       <NewDivider />
       {messages.map((m, i) => {
@@ -342,7 +343,6 @@ const Page = () => {
   const [inChannel, setInChannel] = useState(false);
   const [loading, setLoading] = useState(true);
   const [, forceRerender] = useState(0);
-  const router = useRouter();
 
   useEffect(() => {
     let cancelled = false;
@@ -428,24 +428,20 @@ const Page = () => {
   }, [params.id]);
   console.log(members);
   return (
-    <div className="w-full h-screen flex flex-col font-sans overflow-hidden">
-      {" "}
-      <div className="flex-1 flex min-h-0">
-        <ChannelsSidebar router={router} />
-        {!loading && isPrivate ? (
-          <PrivateChannelNotice />
-        ) : (
-          <MainChannel
-            inChannel={inChannel}
-            data={data ?? {}}
-            members={members}
-            id={params.id}
-            messages={messages}
-            onJoined={() => setInChannel(true)}
-          />
-        )}
-      </div>
-    </div>
+    <>
+      {!loading && isPrivate ? (
+        <PrivateChannelNotice />
+      ) : (
+        <MainChannel
+          inChannel={inChannel}
+          data={data ?? {}}
+          members={members}
+          id={params.id}
+          messages={messages}
+          onJoined={() => setInChannel(true)}
+        />
+      )}
+    </>
   );
 };
 export default Page;
