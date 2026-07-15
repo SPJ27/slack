@@ -4,8 +4,9 @@ import { Hash, Search, Lock } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-const Channel = ({ label, profilePicture, hash, id, isPublic = true }) => (
+const Channel = ({ label, profilePicture, hash, id, isPublic = true, setResults }) => (
   <Link
+    onClick={()=>{setResults([])}}
     href={hash ? `/channels/${id}` : `/dm/${id}`}
     className="mx-2 flex items-center gap-3 rounded-md px-3 py-2 transition-colors hover:bg-white/10"
   >
@@ -109,6 +110,7 @@ export default function TopBar() {
                   .slice(0, 7)
                   .map((item) => (
                     <Channel
+                    setResults={setResults}
                       key={item.id}
                       hash={item.type == "channel"}
                       label={item.name || item.displayName}

@@ -5,10 +5,10 @@ import SidebarBtn from "./SidebarBtn";
 import { get_user } from "@/utils/auth/get_user";
 
 const navItems = [
-  { key: "home", label: "Home", icon: Home },
-  { key: "dms", label: "DMs", icon: MessagesSquare },
-  { key: "activity", label: "Activity", icon: Bell },
-  { key: "dev", label: "Dev", icon: Laptop },
+  { key: "home", label: "Home", icon: Home, href: '/channels' },
+  { key: "dms", label: "DMs", icon: MessagesSquare, href:'' },
+  { key: "activity", label: "Activity", icon: Bell, href: '' },
+  { key: "dev", label: "Dev", icon: Laptop, href:'' },
 ];
 
 const Sidebar = () => {
@@ -28,10 +28,10 @@ const Sidebar = () => {
           alt="logo"
         />
 
-        {navItems.map(({ key, label, icon: Icon }) => {
+        {navItems.map(({ key, label, icon: Icon, href }) => {
           const isActive = active === key;
           return (
-            <SidebarBtn key={key} label={label} Icon={Icon}/>
+            <SidebarBtn key={key} label={label} Icon={Icon} href={href}/>
           );
         })}
 

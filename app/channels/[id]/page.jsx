@@ -262,10 +262,10 @@ const NotInChannel = ({ channelId, onJoined }) => {
   };
 
   return (
-    <div className="px-3 py-2 mb-10 border border-gray-300 max-w-xl mx-auto rounded-md">
-      You need to join this channel to reply
+    <div className="px-6 py-3 mb-13 border text-lg border-gray-400 max-w-xl mx-auto rounded-md">
+      You need to join this channel to reply :) 
       <button
-        className="block mx-auto bg-green-400 px-3 py-2 text-white disabled:opacity-50"
+        className="block text-sm mx-auto bg-green-700 px-3 py-1 mt-1 text-white disabled:opacity-50"
         onClick={handleJoin}
         disabled={joining}
       >
