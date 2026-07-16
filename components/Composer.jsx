@@ -20,6 +20,7 @@ import {
   File,
 } from "lucide-react";
 import "react-quill-new/dist/quill.snow.css";
+import Image from "next/image";
 
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
 
@@ -141,14 +142,14 @@ const Composer = ({ channel_id, channel_name }) => {
     const formData = new FormData();
     formData.append("message", value);
     files.forEach((file) => {
-  formData.append("attachments", file);
-});
-    formData.append("to", channel_id)
-    formData.append("type", "CHANNEL")
-    console.log( value)
+      formData.append("attachments", file);
+    });
+    formData.append("to", channel_id);
+    formData.append("type", "CHANNEL");
+    console.log(value);
     const res = await fetch("/api/messages", {
       method: "POST",
-    
+
       body: formData,
     });
 
@@ -210,25 +211,48 @@ const Composer = ({ channel_id, channel_name }) => {
           {files.map((file, index) => (
             <div
               key={index}
-              className="flex  items-center gap-3 rounded-lg border border-neutral-300 bg-white/5 p-2 w-60"
+              className="flex  items-center gap-3 rounded-lg border border-neutral-300 bg-white/5 p-2 max-w-60"
             >
-              <div className="h-10 w-10 rounded bg-sky-500 flex items-center justify-center text-white font-bold">
-                <File />
-              </div>
+              {!file.type.startsWith("image") ? (
+                <>
+                  <div className="h-10 w-10 rounded bg-sky-500 flex items-center justify-center text-white font-bold">
+                    <File />
+                  </div>
 
-              <div className="flex-1 min-w-0">
-                <p className="truncate font-medium">{file.name}</p>
-                <p className="text-xs text-gray-400">
-                  {(file.size / 1024).toFixed(1)} KB
-                </p>
-              </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="truncate font-medium">{file.name}</p>
+                    <p className="text-xs text-gray-400">
+                      {(file.size / 1024).toFixed(1)} KB
+                    </p>
+                  </div>
 
-              <button
-                onClick={() => setFiles(files.filter((_, i) => i !== index))}
-                className="text-gray-400 hover:text-white"
-              >
-                ✕
-              </button>
+                  <button
+                    onClick={() =>
+                      setFiles(files.filter((_, i) => i !== index))
+                    }
+                    className="text-gray-400 hover:text-white"
+                  >
+                    ✕
+                  </button>
+                </>
+              ) : (
+              <div className="relative group overflow-hidden rounded-sm border border-neutral-300">
+  <Image
+    src={URL.createObjectURL(file)}
+    alt={file.name}
+    width={100}
+    height={100}
+    unoptimized
+    className="max-h-12 w-auto object-contain bg-neutral-100"
+  />
+
+  <button
+    onClick={() => setFiles(files.filter((_, i) => i !== index))}
+    className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm opacity-0 transition group-hover:opacity-100"
+  >
+    ✕
+  </button>
+</div>)}
             </div>
           ))}
         </div>

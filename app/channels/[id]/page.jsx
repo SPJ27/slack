@@ -12,6 +12,7 @@ import {
   UserPlus,
   Trash2,
   LogOut,
+  File,
 } from "lucide-react";
 import Composer from "@/components/Composer";
 import { useParams } from "next/navigation";
@@ -184,8 +185,17 @@ const Avatar = ({
   />
 );
 
-const SimpleMessage = ({ name, time, text, pfp, special, isSame, user }) => (
-  <div className="flex gap-2 px-4 py-1  hover:bg-black/[0.03]">
+const SimpleMessage = ({
+  name,
+  time,
+  text,
+  pfp,
+  special,
+  isSame,
+  user,
+  attachments,
+}) => (
+  <div className="flex gap-2 px-4 py-1 hover:bg-black/[0.03]">
     {!isSame ? (
       <UserHoverCard user={user}>
         <div>
@@ -195,6 +205,7 @@ const SimpleMessage = ({ name, time, text, pfp, special, isSame, user }) => (
     ) : (
       <div className="ml-8" />
     )}
+
     <div className="min-w-0">
       {!isSame && (
         <div className="flex items-baseline gap-2">
@@ -203,16 +214,58 @@ const SimpleMessage = ({ name, time, text, pfp, special, isSame, user }) => (
               {name}
             </span>
           </UserHoverCard>
+
           <span className="text-[12px] text-[#8a8a8a]">{time}</span>
         </div>
       )}
-      {!special ? (
+
+      {special ? (
+        <div className="text-neutral-500 text-sm">{text}</div>
+      ) : (
         <div
           dangerouslySetInnerHTML={{ __html: text }}
           className="text-[15px] font-normal leading-[1.45] tracking-[0.01em] text-[#1d1c1d] antialiased"
         />
-      ) : (
-        <div className="text-neutral-500 text-sm">{text}</div>
+      )}
+
+      {attachments?.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-3">
+          {attachments.map((url, index) => {
+            const isImage = /\.(png|jpe?g|gif|webp|svg|avif)$/i.test(url);
+
+            return isImage ? (
+              <a
+                key={index}
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <img
+                  src={url}
+                  alt=""
+                  className="max-w-xs rounded-sm hover:opacity-99"
+                />
+              </a>
+            ) : (
+              <a
+                key={index}
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 rounded-sm border border-gray-300 bg-white px-3 py-1.5 w-64 hover:bg-neutral-50"
+              >
+                <File className="size-6 text-gray-400 shrink-0" />
+
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium">
+                    {decodeURIComponent(url.split("/").pop())}
+                  </p>
+                  <p className="text-xs text-gray-400">Open attachment</p>
+                </div>
+              </a>
+            );
+          })}
+        </div>
       )}
     </div>
   </div>
@@ -322,6 +375,7 @@ const MainChannel = ({ data, members, id, messages, inChannel, onJoined }) => (
             text={m.message}
             pfp={cachedUser?.profilePicture}
             special={m.from === -101}
+            attachments={m.attachments}
             isSame={
               cachedUser?.id == prevUser?.id &&
               fiveMinutesEarlier < prevTime &&
