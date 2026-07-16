@@ -288,6 +288,11 @@ const PrivateChannelNotice = () => (
     </p>
   </div>
 );
+const Loading = () => (
+  <div className="flex-1 min-w-0 h-screen bg-white text-black flex flex-col items-center justify-center gap-2">
+    <p className="text-[15px] font-semibold">Loading...</p>
+  </div>
+);
 
 const MainChannel = ({ data, members, id, messages, inChannel, onJoined }) => (
   <div className="flex-1 min-w-0 h-screen bg-white text-black flex flex-col min-h-0">
@@ -327,7 +332,7 @@ const MainChannel = ({ data, members, id, messages, inChannel, onJoined }) => (
       })}
     </div>
     {inChannel ? (
-      <Composer channel_id={id} />
+      <Composer channel_id={id} channel_name={data.name}/>
     ) : (
       <NotInChannel channelId={id} onJoined={onJoined} />
     )}
@@ -429,19 +434,24 @@ const Page = () => {
   console.log(members);
   return (
     <>
-      {!loading && isPrivate ? (
-        <PrivateChannelNotice />
+      {!loading ? (
+        !loading && isPrivate ? (
+          <PrivateChannelNotice />
+        ) : (
+          <MainChannel
+            inChannel={inChannel}
+            data={data ?? {}}
+            members={members}
+            id={params.id}
+            messages={messages}
+            onJoined={() => setInChannel(true)}
+          />
+        )
       ) : (
-        <MainChannel
-          inChannel={inChannel}
-          data={data ?? {}}
-          members={members}
-          id={params.id}
-          messages={messages}
-          onJoined={() => setInChannel(true)}
-        />
+        <Loading />
       )}
     </>
   );
 };
 export default Page;
+

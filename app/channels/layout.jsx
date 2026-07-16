@@ -16,4 +16,8 @@ const Layout = ({children}) => {
   )
 }
 
+export const metadata = {
+    title: 'View Channel'
+}
+
 export default Layout

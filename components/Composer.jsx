@@ -1,4 +1,4 @@
-'use client'
+"use client";
 import { useRef, useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import {
@@ -17,11 +17,11 @@ import {
   Underline,
   Strikethrough,
   Link as LinkIcon,
+  File,
 } from "lucide-react";
 import "react-quill-new/dist/quill.snow.css";
 
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
-
 
 const QuillToolbar = ({ onFormat, activeFormats }) => {
   const btn = (active) =>
@@ -105,10 +105,12 @@ const QuillToolbar = ({ onFormat, activeFormats }) => {
   );
 };
 
-const Composer = ({ channel_id }) => {
+const Composer = ({ channel_id, channel_name }) => {
   const [value, setValue] = useState("");
   const [activeFormats, setActiveFormats] = useState({});
   const quillRef = useRef(null);
+  const [files, setFiles] = useState([]);
+  const fileInputRef = useRef(null);
 
   const getEditor = () => quillRef.current?.getEditor?.() ?? null;
 
@@ -136,43 +138,48 @@ const Composer = ({ channel_id }) => {
   const handleSend = async () => {
     const text = value.replace(/<(.|\n)*?>/g, "").trim();
     if (!text) return;
-    console.log("send:", value);
+    const formData = new FormData();
+    formData.append("message", value);
+    files.forEach((file) => {
+  formData.append("attachments", file);
+});
+    formData.append("to", channel_id)
+    formData.append("type", "CHANNEL")
+    console.log( value)
     const res = await fetch("/api/messages", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        to: channel_id,
-        message: value,
-        type: "CHANNEL",
-      }),
+    
+      body: formData,
     });
 
     setValue("");
-  };
-useEffect(() => {
-  const editor = quillRef.current?.getEditor();
-  if (!editor) return;
-
-  const binding = editor.keyboard.addBinding(
-    { key: 13, shiftKey: null },
-    (range, context) => {
-      if (context.shiftKey) return true;
-
-      handleSend();
-      return false;
-    }
-  );
-
-  return () => {
-    if (binding) {
-      editor.keyboard.bindings[13] = editor.keyboard.bindings[13].filter(
-        (b) => b !== binding
-      );
+    setFiles([]);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
   };
-}, [handleSend]);
+  useEffect(() => {
+    const editor = quillRef.current?.getEditor();
+    if (!editor) return;
+
+    const binding = editor.keyboard.addBinding(
+      { key: 13, shiftKey: null },
+      (range, context) => {
+        if (context.shiftKey) return true;
+
+        handleSend();
+        return false;
+      },
+    );
+
+    return () => {
+      if (binding) {
+        editor.keyboard.bindings[13] = editor.keyboard.bindings[13].filter(
+          (b) => b !== binding,
+        );
+      }
+    };
+  }, [handleSend]);
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -180,7 +187,7 @@ useEffect(() => {
     }
   };
 
- const quillModules = {
+  const quillModules = {
     toolbar: false,
   };
   return (
@@ -194,19 +201,56 @@ useEffect(() => {
           onChange={setValue}
           onChangeSelection={refreshActiveFormats}
           modules={quillModules}
-          placeholder="Message #stardance-help"
+          placeholder={`Message #${channel_name}`}
           className="composer-quill"
         />
       </div>
+      {files.length > 0 && (
+        <div className="px-3 pt-3 flex flex-wrap gap-2">
+          {files.map((file, index) => (
+            <div
+              key={index}
+              className="flex  items-center gap-3 rounded-lg border border-neutral-300 bg-white/5 p-2 w-60"
+            >
+              <div className="h-10 w-10 rounded bg-sky-500 flex items-center justify-center text-white font-bold">
+                <File />
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <p className="truncate font-medium">{file.name}</p>
+                <p className="text-xs text-gray-400">
+                  {(file.size / 1024).toFixed(1)} KB
+                </p>
+              </div>
+
+              <button
+                onClick={() => setFiles(files.filter((_, i) => i !== index))}
+                className="text-gray-400 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
       <div className="flex items-center justify-between px-2.5 py-1.5 shrink-0">
         <div className="flex items-center gap-3 text-[#5a5a5a]">
-          <Plus className="size-4" />
-          <span className="text-[15px] italic font-semibold">Aa</span>
-          <Smile className="size-4" />
-          <AtSign className="size-4" />
-          <Video className="size-4" />
-          <Mic className="size-4" />
-          <Paperclip className="size-4" />
+          <button type="button" onClick={() => fileInputRef.current?.click()}>
+            <Plus className="size-4" />
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            className="hidden"
+            onChange={(e) => {
+              const selected = Array.from(e.target.files);
+
+              setFiles((prev) => [...prev, ...selected]);
+
+              e.target.value = "";
+            }}
+          />
         </div>
         <button
           onClick={handleSend}
@@ -237,4 +281,4 @@ useEffect(() => {
   );
 };
 
-export default Composer
+export default Composer;
