@@ -14,6 +14,10 @@ const nextConfig = {
         protocol: "https",
         hostname: "ca.slack-edge.com",
       },
+      {
+        protocol: "https",
+        hostname: "cdn.hackclub.com",
+      },
     ],
   },
 };

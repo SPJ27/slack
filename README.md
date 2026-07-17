@@ -5,7 +5,6 @@ Tech Stack (Temp)
  - Hack Club Auth
 
  TODO
- - Add attachments
  - Add ability to add users manually, and private channels 
  - Add user edit page
  - Add DMs
