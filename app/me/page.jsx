@@ -5,11 +5,25 @@ import React, { useEffect, useState } from "react";
 
 const page = () => {
   const [user, setUser] = useState();
-
+  const [current, setCurrent] = useState();
+  const handleSave = async () => {
+    const formData = new FormData();
+    formData.append("data", JSON.stringify(user));
+    const res = await fetch("/api/user/data", {
+      method: "POST",
+      body: formData,
+    });
+    const body = await res.json();
+    if (body.status === 200) {
+      setCurrent({ ...user });
+    }
+  };
   useEffect(() => {
     const func = async () => {
       const res = await fetch("/api/user/data");
       const body = await res.json();
+      setCurrent(body.data);
+
       setUser(body.data);
     };
     func();
@@ -95,20 +109,20 @@ const page = () => {
             <label className="block text-sm font-semibold text-neutral-800">
               Joined On
             </label>
-<input
-  type="text"
-  title="hola"
-  value={
-    user?.created_at
-      ? new Intl.DateTimeFormat("en-US", {
-          dateStyle: "long",
-          timeZone: "UTC",
-        }).format(new Date(user.created_at))
-      : ""
-  }
-  disabled
-  className="mt-3 w-full bg-neutral-100 text-neutral-700 rounded-md border border-gray-300 px-3 py-1 text-md font-medium outline-none"
-/>
+            <input
+              type="text"
+              title="hola"
+              value={
+                user?.created_at
+                  ? new Intl.DateTimeFormat("en-US", {
+                      dateStyle: "long",
+                      timeZone: "UTC",
+                    }).format(new Date(user.created_at))
+                  : ""
+              }
+              disabled
+              className="mt-3 w-full bg-neutral-100 text-neutral-700 rounded-md border border-gray-300 px-3 py-1 text-md font-medium outline-none"
+            />
           </div>
           <div>
             <label className="block text-sm font-semibold text-neutral-800">
@@ -122,6 +136,13 @@ const page = () => {
               className="mt-3 w-full bg-neutral-100 text-neutral-700 rounded-md border border-gray-300 px-3 py-1 text-md font-medium outline-none"
             />
           </div>
+          <button
+            onClick={handleSave}
+            className="bg-green-800 disabled:bg-neutral-500 transition-colors disabled:cursor-not-allowed hover:bg-green-900 px-4 py-1.5 text-white font-semibold rounded-xs cursor-pointer"
+            disabled={JSON.stringify(current) == JSON.stringify(user)}
+          >
+            Save
+          </button>
         </div>
       </div>
     </div>

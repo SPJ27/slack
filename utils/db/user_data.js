@@ -20,3 +20,12 @@ export async function remove_from_channel(channel_id, user_id) {
     .eq('user_id', user_id)
   return { data, error };
 }
+
+export async function edit_user_data(id, data){
+  const supabase = await createClient(await cookies())
+  const {data: update, error} = await supabase
+  .from('users')
+  .update(data)
+  .eq('id', id)
+  return {data, error}
+}
