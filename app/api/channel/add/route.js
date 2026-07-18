@@ -72,6 +72,7 @@ export async function POST(req) {
         to: channel_id,
         message: `${member.displayName} was added to this channel`,
         type: "CHANNEL",
+        app: true
       });
 
     return NextResponse.json({ message: "success" }, { status: 200 });

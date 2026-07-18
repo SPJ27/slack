@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Home, Bell, Laptop, Plus, Moon, MessagesSquare } from "lucide-react";
 import SidebarBtn from "./SidebarBtn";
 import { get_user } from "@/utils/auth/get_user";
-
+import Link from 'next/link'
 const navItems = [
   { key: "home", label: "Home", icon: Home, href: '/channels' },
   { key: "dms", label: "DMs", icon: MessagesSquare, href:'' },
@@ -38,13 +38,13 @@ const Sidebar = () => {
       <div className="flex-1" />
       <div className="flex flex-col items-center gap-4 pb-1">
        
-        <button className="w-10 h-10 rounded-md overflow-hidden ring-1 bg-white ring-white/10">
+        <Link href='/me' className="w-10 h-10 rounded-md overflow-hidden ring-1 bg-white ring-white/10">
           <img
             src={user?.profilePicture}
             alt="avatar"
             className="w-full h-full object-cover"
           />
-        </button>
+        </Link>
       </div>
     </div>
   );

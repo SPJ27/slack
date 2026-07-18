@@ -30,36 +30,16 @@ const QuillToolbar = ({ onFormat, activeFormats }) => {
 
   return (
     <div className="flex items-center gap-3 px-2.5 py-1.5 border-b border-black/10 text-[#5a5a5a] shrink-0">
-      <button
-        type="button"
-        className={btn(activeFormats.bold)}
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={() => onFormat("bold", !activeFormats.bold)}
-      >
+      <button type="button" className={btn(activeFormats.bold)} onMouseDown={(e) => e.preventDefault()} onClick={() => onFormat("bold", !activeFormats.bold)}>
         <Bold className="size-4" />
       </button>
-      <button
-        type="button"
-        className={btn(activeFormats.italic)}
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={() => onFormat("italic", !activeFormats.italic)}
-      >
+      <button type="button" className={btn(activeFormats.italic)} onMouseDown={(e) => e.preventDefault()} onClick={() => onFormat("italic", !activeFormats.italic)}>
         <Italic className="size-4" />
       </button>
-      <button
-        type="button"
-        className={btn(activeFormats.underline)}
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={() => onFormat("underline", !activeFormats.underline)}
-      >
+      <button type="button" className={btn(activeFormats.underline)} onMouseDown={(e) => e.preventDefault()} onClick={() => onFormat("underline", !activeFormats.underline)}>
         <Underline className="size-4" />
       </button>
-      <button
-        type="button"
-        className={btn(activeFormats.strike)}
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={() => onFormat("strike", !activeFormats.strike)}
-      >
+      <button type="button" className={btn(activeFormats.strike)} onMouseDown={(e) => e.preventDefault()} onClick={() => onFormat("strike", !activeFormats.strike)}>
         <Strikethrough className="size-4" />
       </button>
       <button
@@ -73,32 +53,13 @@ const QuillToolbar = ({ onFormat, activeFormats }) => {
       >
         <LinkIcon className="size-4" />
       </button>
-      <button
-        type="button"
-        className={btn(activeFormats.list === "bullet")}
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={() =>
-          onFormat("list", activeFormats.list === "bullet" ? false : "bullet")
-        }
-      >
+      <button type="button" className={btn(activeFormats.list === "bullet")} onMouseDown={(e) => e.preventDefault()} onClick={() => onFormat("list", activeFormats.list === "bullet" ? false : "bullet")}>
         <List className="size-4" />
       </button>
-      <button
-        type="button"
-        className={btn(activeFormats.list === "ordered")}
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={() =>
-          onFormat("list", activeFormats.list === "ordered" ? false : "ordered")
-        }
-      >
+      <button type="button" className={btn(activeFormats.list === "ordered")} onMouseDown={(e) => e.preventDefault()} onClick={() => onFormat("list", activeFormats.list === "ordered" ? false : "ordered")}>
         <ListOrdered className="size-4" />
       </button>
-      <button
-        type="button"
-        className={btn(activeFormats["code-block"])}
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={() => onFormat("code-block", !activeFormats["code-block"])}
-      >
+      <button type="button" className={btn(activeFormats["code-block"])} onMouseDown={(e) => e.preventDefault()} onClick={() => onFormat("code-block", !activeFormats["code-block"])}>
         <Code className="size-4" />
       </button>
       <div className="w-px h-4 bg-black/10" />
@@ -146,10 +107,9 @@ const Composer = ({ channel_id, channel_name }) => {
     });
     formData.append("to", channel_id);
     formData.append("type", "CHANNEL");
-    console.log(value);
+
     const res = await fetch("/api/messages", {
       method: "POST",
-
       body: formData,
     });
 
@@ -159,31 +119,11 @@ const Composer = ({ channel_id, channel_name }) => {
       fileInputRef.current.value = "";
     }
   };
-  useEffect(() => {
-    const editor = quillRef.current?.getEditor();
-    if (!editor) return;
 
-    const binding = editor.keyboard.addBinding(
-      { key: 13, shiftKey: null },
-      (range, context) => {
-        if (context.shiftKey) return true;
-
-        handleSend();
-        return false;
-      },
-    );
-
-    return () => {
-      if (binding) {
-        editor.keyboard.bindings[13] = editor.keyboard.bindings[13].filter(
-          (b) => b !== binding,
-        );
-      }
-    };
-  }, [handleSend]);
-  const handleKeyDown = (e) => {
+  const handleEditorKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
+      e.stopPropagation();
       handleSend();
     }
   };
@@ -191,10 +131,11 @@ const Composer = ({ channel_id, channel_name }) => {
   const quillModules = {
     toolbar: false,
   };
+
   return (
-    <div className="mx-4 mb-12 border border-black/20 rounded-lg overflow-hidden shrink-0 flex flex-col">
+    <div className="mx-4 mb-12 border border-black/20 rounded-lg overflow-hidden shrink-0 flex flex-col relative">
       <QuillToolbar onFormat={handleFormat} activeFormats={activeFormats} />
-      <div onKeyDown={handleKeyDown}>
+      <div onKeyDownCapture={handleEditorKeyDown}>
         <ReactQuill
           ref={quillRef}
           theme="snow"
@@ -206,6 +147,7 @@ const Composer = ({ channel_id, channel_name }) => {
           className="composer-quill"
         />
       </div>
+
       {files.length > 0 && (
         <div className="px-3 pt-3 flex flex-wrap gap-2">
           {files.map((file, index) => (
@@ -236,23 +178,26 @@ const Composer = ({ channel_id, channel_name }) => {
                   </button>
                 </>
               ) : (
-              <div className="relative group overflow-hidden rounded-sm border border-neutral-300">
-  <Image
-    src={URL.createObjectURL(file)}
-    alt={file.name}
-    width={100}
-    height={100}
-    unoptimized
-    className="max-h-12 w-auto object-contain bg-neutral-100"
-  />
+                <div className="relative group overflow-hidden rounded-sm border border-neutral-300">
+                  <Image
+                    src={URL.createObjectURL(file)}
+                    alt={file.name}
+                    width={100}
+                    height={100}
+                    unoptimized
+                    className="max-h-12 w-auto object-contain bg-neutral-100"
+                  />
 
-  <button
-    onClick={() => setFiles(files.filter((_, i) => i !== index))}
-    className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm opacity-0 transition group-hover:opacity-100"
-  >
-    ✕
-  </button>
-</div>)}
+                  <button
+                    onClick={() =>
+                      setFiles(files.filter((_, i) => i !== index))
+                    }
+                    className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm opacity-0 transition group-hover:opacity-100"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>

@@ -54,6 +54,7 @@ export async function POST(req) {
         to: channel_id,
         message: `${user.displayName} joined this channel`,
         type: "CHANNEL",
+        app:true
       });
     return NextResponse.json({ message: "success" }, { status: 200 });
   } catch (err) {

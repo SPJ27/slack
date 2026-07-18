@@ -5,8 +5,8 @@ Tech Stack (Temp)
  - Hack Club Auth
 
  TODO
- - Add ability to add users manually, and private channels 
  - Add DMs
+ - Add channel and user mentions in quill
  - Add activity
  - Add video call feature
 

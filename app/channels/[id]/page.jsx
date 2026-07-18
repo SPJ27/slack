@@ -30,7 +30,7 @@ const ChannelHeader = ({ data, members, id }) => {
   const [inviteQuery, setInviteQuery] = useState("");
   const [inviteResults, setInviteResults] = useState([]);
   const [inviteLoading, setInviteLoading] = useState(false);
-  const [inviting, setInviting] = useState(null); 
+  const [inviting, setInviting] = useState(null);
   const inviteCache = useRef(new Map());
 
   useEffect(() => {
@@ -339,6 +339,7 @@ const SimpleMessage = ({
   isSame,
   user,
   attachments,
+  app,
 }) => (
   <div className="flex gap-2 px-4 py-1 hover:bg-black/[0.03]">
     {!isSame ? (
@@ -354,11 +355,24 @@ const SimpleMessage = ({
     <div className="min-w-0">
       {!isSame && (
         <div className="flex items-baseline gap-2">
-          <UserHoverCard user={user}>
-            <span className="font-semibold text-[15px] cursor-pointer hover:underline">
-              {name}
+          {!special ? (
+            <UserHoverCard user={user}>
+              <span className="font-semibold text-[15px] cursor-pointer hover:underline items-center flex">
+                {name}{" "}
+              </span>
+            </UserHoverCard>
+          ) : (
+            <span className="font-semibold text-[15px]  items-center flex">
+              {name}{" "}
+              {app ? (
+                <span className="text-[11px] px-1 py bg-neutral-500 rounded-xs ml-1.5  text-white">
+                  APP
+                </span>
+              ) : (
+                ""
+              )}
             </span>
-          </UserHoverCard>
+          )}
 
           <span className="text-[12px] text-[#8a8a8a]">{time}</span>
         </div>
@@ -521,6 +535,7 @@ const MainChannel = ({ data, members, id, messages, inChannel, onJoined }) => (
             pfp={cachedUser?.profilePicture}
             special={m.from === -101}
             attachments={m.attachments}
+            app={m.app}
             isSame={
               cachedUser?.id == prevUser?.id &&
               fiveMinutesEarlier < prevTime &&

@@ -63,6 +63,7 @@ export async function POST(request) {
     to: data.id,
     message: `This channel was created by ${user.displayName}`,
     type: "CHANNEL",
+    app: true
   });
   console.log("data", insertDefault);
   console.log("error", insertDefaultError);

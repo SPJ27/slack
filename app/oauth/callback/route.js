@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { randomUUID } from "crypto";
 import { redirect } from "next/navigation";
 import { NextResponse } from "next/server";
+import { add_to_channel } from "@/utils/db/channel";
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -120,6 +121,6 @@ export async function GET(request) {
       { status: 500 },
     );
   }
+  const add = await add_to_channel(46, userRow.id);
   return NextResponse.redirect(new URL("/home", request.url));
 }
-

@@ -24,6 +24,7 @@ export async function DELETE(request) {
           to: channel_id,
           message: `${user.displayName} left this channel`,
           type: "CHANNEL",
+          app: true
         });
       
   return NextResponse.json({ message: "success" }, { status: 200 });
