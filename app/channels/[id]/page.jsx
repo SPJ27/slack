@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import UserHoverCard from "@/components/UserHoverCard";
 import {
   ChevronDown,
+  ChevronLeft,
   Star,
   Hash,
   Lock,
@@ -13,6 +14,7 @@ import {
   Trash2,
   LogOut,
   File,
+  Search,
 } from "lucide-react";
 import Composer from "@/components/Composer";
 import { useParams } from "next/navigation";
@@ -22,7 +24,14 @@ import Image from "next/image";
 
 const ChannelHeader = ({ data, members, id }) => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [inviteMenuOpen, setInviteMenuOpen] = useState(false);
   const menuRef = useRef(null);
+
+  const [inviteQuery, setInviteQuery] = useState("");
+  const [inviteResults, setInviteResults] = useState([]);
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviting, setInviting] = useState(null); 
+  const inviteCache = useRef(new Map());
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -34,6 +43,76 @@ const ChannelHeader = ({ data, members, id }) => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (!menuOpen || !inviteMenuOpen) {
+      setInviteQuery("");
+      setInviteResults([]);
+      setInviteLoading(false);
+    }
+  }, [menuOpen, inviteMenuOpen]);
+
+  useEffect(() => {
+    if (!inviteMenuOpen) return;
+
+    if (!inviteQuery.trim()) {
+      setInviteResults([]);
+      return;
+    }
+
+    const timeout = setTimeout(async () => {
+      if (inviteCache.current.has(inviteQuery)) {
+        setInviteResults(inviteCache.current.get(inviteQuery));
+        return;
+      }
+
+      setInviteLoading(true);
+
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/search/users?query=${encodeURIComponent(inviteQuery)}`,
+        );
+
+        const data = await res.json();
+
+        inviteCache.current.set(inviteQuery, data);
+        setInviteResults(data);
+      } catch (err) {
+        setInviteResults([]);
+      } finally {
+        setInviteLoading(false);
+      }
+    }, 250);
+
+    return () => clearTimeout(timeout);
+  }, [inviteQuery, inviteMenuOpen]);
+
+  const handleInvite = async (user) => {
+    setInviting(user.id);
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/channel/add`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ channel_id: id, member_id: user.id }),
+        },
+      );
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        alert(body.message || "Failed to invite user");
+        return;
+      }
+
+      setInviteResults((prev) => prev.filter((u) => u.id !== user.id));
+    } catch (err) {
+      alert("Something went wrong");
+    } finally {
+      setInviting(null);
+    }
+  };
 
   return (
     <div className="h-14 shrink-0 border-b border-black/10 flex items-center px-4 justify-between">
@@ -84,89 +163,155 @@ const ChannelHeader = ({ data, members, id }) => {
           >
             <MoreVertical className="size-4 text-[#8a8a8a]" />
           </button>
+          {menuOpen &&
+            (!inviteMenuOpen ? (
+              <div className="absolute py-1 right-0 top-full mt-2 w-56 overflow-hidden rounded-sm border border-gray-200 bg-white shadow-xl z-50">
+                <button
+                  onClick={() => setInviteMenuOpen(true)}
+                  className="flex w-full items-center gap-3 px-4 py-2 text-sm hover:bg-gray-100"
+                >
+                  <UserPlus className="size-4" />
+                  Invite people
+                </button>
 
-          {menuOpen && (
-            <div className="absolute py-1 right-0 top-full mt-2 w-56 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xl z-50">
-              <button className="flex w-full items-center gap-3 px-4 py-2 text-sm hover:bg-gray-100">
-                <UserPlus className="size-4" />
-                Invite people
-              </button>
+                <button className="flex w-full items-center gap-3 px-4 py-2 text-sm hover:bg-gray-100">
+                  <Settings className="size-4" />
+                  Channel settings
+                </button>
 
-              <button className="flex w-full items-center gap-3 px-4 py-2 text-sm hover:bg-gray-100">
-                <Settings className="size-4" />
-                Channel settings
-              </button>
+                <button className="flex w-full items-center gap-3 px-4 py-2 text-sm hover:bg-gray-100">
+                  <LinkIcon className="size-4" />
+                  Copy channel link
+                </button>
 
-              <button className="flex w-full items-center gap-3 px-4 py-2 text-sm hover:bg-gray-100">
-                <LinkIcon className="size-4" />
-                Copy channel link
-              </button>
+                <div className="border-t" />
 
-              <div className="border-t" />
-
-              <button
-                onClick={async () => {
-                  if (!confirm("Are you sure you want to leave this channel?"))
-                    return;
-
-                  try {
-                    const res = await fetch(
-                      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/channel/leave`,
-                      {
-                        method: "DELETE",
-                        headers: { channel_id: id },
-                      },
-                    );
-
-                    if (!res.ok) {
-                      const body = await res.json().catch(() => ({}));
-                      alert(body.message || "Failed to leave channel");
+                <button
+                  onClick={async () => {
+                    if (
+                      !confirm("Are you sure you want to leave this channel?")
+                    )
                       return;
+
+                    try {
+                      const res = await fetch(
+                        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/channel/leave`,
+                        {
+                          method: "DELETE",
+                          headers: { channel_id: id },
+                        },
+                      );
+
+                      if (!res.ok) {
+                        const body = await res.json().catch(() => ({}));
+                        alert(body.message || "Failed to leave channel");
+                        return;
+                      }
+
+                      window.location.href = "/channels";
+                    } catch (err) {
+                      alert("Something went wrong");
                     }
+                  }}
+                  className="flex w-full items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                >
+                  <LogOut className="size-4" />
+                  Leave channel
+                </button>
 
-                    window.location.href = "/channels";
-                  } catch (err) {
-                    alert("Something went wrong");
-                  }
-                }}
-                className="flex w-full items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-              >
-                <LogOut className="size-4" />
-                Leave channel
-              </button>
-
-              <button
-                onClick={async () => {
-                  if (!confirm("Are you sure you want to delete this channel?"))
-                    return;
-
-                  try {
-                    const res = await fetch(
-                      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/channel`,
-                      {
-                        method: "DELETE",
-                        headers: { channel_id: id },
-                      },
-                    );
-
-                    if (!res.ok) {
-                      const body = await res.json().catch(() => ({}));
-                      alert(body.message || "Failed to delete channel");
+                <button
+                  onClick={async () => {
+                    if (
+                      !confirm("Are you sure you want to delete this channel?")
+                    )
                       return;
-                    }
 
-                    window.location.href = "/channels";
-                  } catch (err) {
-                    alert("Something went wrong");
-                  }
-                }}
-                className="flex w-full items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-              >
-                <Trash2 className="size-4" />
-                Delete channel
-              </button>
-            </div>
-          )}
+                    try {
+                      const res = await fetch(
+                        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/channel`,
+                        {
+                          method: "DELETE",
+                          headers: { channel_id: id },
+                        },
+                      );
+
+                      if (!res.ok) {
+                        const body = await res.json().catch(() => ({}));
+                        alert(body.message || "Failed to delete channel");
+                        return;
+                      }
+
+                      window.location.href = "/channels";
+                    } catch (err) {
+                      alert("Something went wrong");
+                    }
+                  }}
+                  className="flex w-full items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                >
+                  <Trash2 className="size-4" />
+                  Delete channel
+                </button>
+              </div>
+            ) : (
+              <div className="absolute py-2 right-0 top-full mt-2 w-72 overflow-hidden rounded-sm border border-gray-200 bg-white shadow-xl z-50">
+                <div className="flex items-center gap-1 px-2 pb-2">
+                  <button
+                    onClick={() => setInviteMenuOpen(false)}
+                    className="rounded p-1 hover:bg-gray-100 shrink-0"
+                  >
+                    <ChevronLeft className="size-4 text-neutral-500" />
+                  </button>
+
+                  <div className="flex items-center flex-1 min-w-0">
+                    <Search className="size-4 text-neutral-500 ml-1 shrink-0" />
+                    <input
+                      autoFocus
+                      value={inviteQuery}
+                      onChange={(e) => setInviteQuery(e.target.value)}
+                      placeholder="Search people"
+                      className="ml-2 flex-1 min-w-0 text-sm outline-none border-b border-neutral-200 py-1"
+                    />
+                  </div>
+                </div>
+
+                <div className="max-h-64 overflow-y-auto">
+                  {inviteLoading ? (
+                    <div className="px-4 py-2 text-sm text-gray-400">
+                      Searching...
+                    </div>
+                  ) : inviteQuery.trim() && inviteResults.length === 0 ? (
+                    <div className="px-4 py-2 text-sm text-gray-400">
+                      No people found
+                    </div>
+                  ) : (
+                    inviteResults.slice(0, 7).map((user) => (
+                      <button
+                        key={user.id}
+                        onClick={() => handleInvite(user)}
+                        disabled={inviting === user.id}
+                        className="flex w-full items-center gap-3 px-4 py-2 text-sm hover:bg-gray-100 disabled:opacity-50"
+                      >
+                        <Image
+                          src={user.profilePicture}
+                          alt={user.displayName}
+                          width={28}
+                          height={28}
+                          className="size-7 rounded-sm object-cover shrink-0"
+                        />
+                        <span className="truncate flex-1 text-left">
+                          {user.displayName}
+                        </span>
+                        {inviting === user.id && (
+                          <span className="text-xs text-gray-400 shrink-0">
+                            Inviting...
+                          </span>
+                        )}
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+            ))}
         </div>
       </div>
     </div>
@@ -386,7 +531,7 @@ const MainChannel = ({ data, members, id, messages, inChannel, onJoined }) => (
       })}
     </div>
     {inChannel ? (
-      <Composer channel_id={id} channel_name={data.name}/>
+      <Composer channel_id={id} channel_name={data.name} />
     ) : (
       <NotInChannel channelId={id} onJoined={onJoined} />
     )}
@@ -508,4 +653,3 @@ const Page = () => {
   );
 };
 export default Page;
-

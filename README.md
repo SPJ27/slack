@@ -6,7 +6,6 @@ Tech Stack (Temp)
 
  TODO
  - Add ability to add users manually, and private channels 
- - Add user edit page
  - Add DMs
  - Add activity
  - Add video call feature

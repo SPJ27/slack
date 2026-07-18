@@ -3,6 +3,7 @@ import { get_user_id } from "@/utils/auth/get_user_id";
 import { add_to_channel, get_channel_data } from "@/utils/db/channel";
 import { NextResponse } from "next/server";
 import { add_message } from "@/utils/db/message";
+import { in_channel } from "@/utils/db/user_data";
 export async function POST(req) {
   try {
     const user = await get_user();
@@ -23,7 +24,7 @@ export async function POST(req) {
     const { channel_id, member_id } = body;
     if (!channel_id || !member_id) {
       return NextResponse.json(
-        { message: "channel_id is required" },
+        { message: "channel_id/member_id is required" },
         { status: 400 },
       );
     }
@@ -37,14 +38,15 @@ export async function POST(req) {
         { status: 404 },
       );
     }
-    console.log('abc', user.id, channel.created_by)
     if (!channel.isPublic && user.id != parseInt(channel.created_by)) {
       return NextResponse.json(
         { message: "only the creator can add to private channels" },
         { status: 403 },
       );
     }
-
+    const inChannel = await in_channel(channel_id, member_id
+    )
+    if (inChannel) return NextResponse.json({message: 'already in channel'}, {status: 409})
     const insertError  = await add_to_channel(channel_id, member_id);
     const member = await get_user_id(member_id);
 

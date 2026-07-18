@@ -1,5 +1,6 @@
 import { get_user } from "@/utils/auth/get_user";
 import { add_message } from "@/utils/db/message";
+import { in_channel } from "@/utils/db/user_data";
 import { createClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
@@ -34,13 +35,8 @@ export async function POST(request) {
 
   const supabase = await createClient(await cookies());
   if (type == "CHANNEL") {
-    const { data: userInChannel, error: userInChannelError } = await supabase
-      .from("channel_members")
-      .select()
-      .eq("user_id", user.id)
-      .eq("channel_id", to)
-      .single();
-    if (userInChannel.length == 0) {
+    const userInChannel = await in_channel(to, user.id)
+    if (!userInChannel) {
       return NextResponse.json({ message: "Not in channel" }, { status: 403 });
     }
   }
