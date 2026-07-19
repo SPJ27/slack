@@ -10,11 +10,10 @@ import { add_message } from "@/utils/db/message";
 import { remove_from_channel, in_channel } from "@/utils/db/user_data";
 import { get_user_id } from "@/utils/auth/get_user_id";
 
-export async function createChannel(name, description, isPublic) {
+export async function createChannel(name: string, description: string, isPublic: boolean) {
   if (name.trim().length === 0) {
     throw new Error("'channel name' cannot be empty");
   }
-  console.log(isPublic);
   const user = await get_user();
   if (!user) {
     throw new Error("unauthenticated");
@@ -50,7 +49,7 @@ export async function createChannel(name, description, isPublic) {
   return data;
 }
 
-export async function deleteChannel(channel_id) {
+export async function deleteChannel(channel_id: number) {
   const user = await get_user();
 
   if (!user) {
@@ -66,7 +65,7 @@ export async function deleteChannel(channel_id) {
   const { error: deleteError } = await remove_channel(channel_id);
 }
 
-export async function leave(channel_id) {
+export async function leave(channel_id: number) {
   const user = await get_user();
   if (!user) throw new Error("Unauthenticated");
 
@@ -85,7 +84,7 @@ export async function leave(channel_id) {
   });
 }
 
-export async function join(channel_id) {
+export async function join(channel_id: number) {
   const user = await get_user();
   if (!user) {
     throw new Error("unauthenticated");
@@ -116,7 +115,8 @@ export async function join(channel_id) {
   });
 }
 
-export async function add(channel_id, member_id) {
+export async function add(channel_id: number, member_id: number) {
+  const user = await get_user()
   const { data: channel, error: channelError } =
     await get_channel_data(channel_id);
 

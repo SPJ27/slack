@@ -1,7 +1,5 @@
 "use client";
 import { Hash } from "lucide-react";
-import ChannelsSidebar from "@/components/ChannelsSidebar";
-import { useRouter } from "next/navigation";
 
 const Home = () => (
   <div className="flex-1 min-w-0 h-screen bg-white text-black flex flex-col items-center justify-center gap-2">

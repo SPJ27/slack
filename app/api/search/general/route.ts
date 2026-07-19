@@ -1,18 +1,22 @@
 import { search_channels } from "@/utils/db/channel";
 import { search_users } from "@/utils/db/user_data";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-function getScore(item, query) {
+interface SearchResult {
+  id: number;
+  type: "channel" | "user";
+  name?: string;
+  displayName?: string;
+  email?: string;
+  desc?: string;
+  profilePicture?: string;
+}
+
+function getScore(item: SearchResult, query: string): number {
   const q = query.toLowerCase().trim();
 
-  const fields = [
-    item.name,
-    item.displayName,
-    item.username,
-    item.email,
-    item.desc,
-  ]
-    .filter(Boolean)
+  const fields = [item.name, item.displayName, item.email, item.desc]
+    .filter((field): field is string => Boolean(field))
     .map((field) => field.toLowerCase());
 
   let score = 0;
@@ -30,32 +34,32 @@ function getScore(item, query) {
   return score;
 }
 
-export async function GET(request) {
+export async function GET(request: NextRequest) {
   const query = request.nextUrl.searchParams.get("query")?.trim() ?? "";
 
   if (!query) {
     return NextResponse.json([]);
   }
 
-  const [{ data: channels = [] }, { data: users = [] }] = await Promise.all([
-    search_channels(query),
-    search_users(query),
-  ]);
+  const [{ data: channelData, error: channelError }, { data: userData, error: userError }] =
+    await Promise.all([search_channels(query), search_users(query)]);
 
-  const results = [
+  const channels = channelData ?? [];
+  const users = userData ?? [];
+
+  const results: SearchResult[] = [
     ...channels.map((channel) => ({
       ...channel,
-      type: "channel",
+      type: "channel" as const,
     })),
     ...users.map((user) => ({
       ...user,
-      type: "user",
+      type: "user" as const,
     })),
   ];
 
   results.sort((a, b) => {
     const scoreDiff = getScore(b, query) - getScore(a, query);
-
     if (scoreDiff !== 0) return scoreDiff;
 
     const aName = (a.name || a.displayName || "").toLowerCase();

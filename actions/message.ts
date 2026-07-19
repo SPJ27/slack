@@ -2,11 +2,8 @@
 import { get_user } from "@/utils/auth/get_user";
 import { add_message } from "@/utils/db/message";
 import { in_channel } from "@/utils/db/user_data";
-import { refresh } from "next/cache";
-import { NextResponse } from "next/server";
 
-export async function send_message(body) {
-
+export async function send_message(body: FormData): Promise<void> {
   const to = body.get("to");
   const message = body.get("message");
   const attachments = body.getAll("attachments");
@@ -23,15 +20,13 @@ export async function send_message(body) {
       headers: { Authorization: `Bearer ${process.env.CDN_API_KEY}` },
       body: formData,
     });
-
     const { url } = await response.json();
     files.push(url)
   }
-
   if (type == "CHANNEL") {
     const userInChannel = await in_channel(to, user.id)
     if (!userInChannel) {
-      return NextResponse.json({ message: "Not in channel" }, { status: 403 });
+      throw new Error('not in channel')
     }
   }
   const { error } = await add_message({
@@ -42,7 +37,7 @@ export async function send_message(body) {
     reply_to,
     type,
   });
-  console.log(error);
+
   if (error) {
     throw new Error('Unable to add message')
   }

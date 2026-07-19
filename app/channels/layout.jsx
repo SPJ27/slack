@@ -1,5 +1,5 @@
-import ChannelsSidebar from '@/components/ChannelsSidebar'
 import React from 'react'
+import ChannelsSidebar from '@/components/ChannelsSidebar'
 
 const Layout = ({children}) => {
   return (

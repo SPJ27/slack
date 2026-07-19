@@ -93,10 +93,9 @@ const ChannelHeader = ({ data, members, id }) => {
 
     try {
       const res = await add(id, user.id)
-
       setInviteResults((prev) => prev.filter((u) => u.id !== user.id));
     } catch (err) {
-      alert("Something went wrong");
+      alert(err);
     } finally {
       setInviting(null);
     }
