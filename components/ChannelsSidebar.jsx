@@ -1,4 +1,4 @@
-'use client'
+"use client";
 import { useState, useRef, useEffect, useDebugValue } from "react";
 import {
   Settings,
@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
+import { createChannel } from "@/actions/channel";
 
 const TopItem = ({ Icon, label, trailing }) => (
   <span className="flex mt-1.5 pl-2 font-normal text-sm font-sans items-center gap-1.5 text-[#f9edffcc]">
@@ -32,9 +33,15 @@ const SectionHeader = ({ label }) => (
   </div>
 );
 
-const Channel = ({ label, locked = false, unread = false, active = false, id }) => (
-  <Link  
-  href={`/channels/${id}`}
+const Channel = ({
+  label,
+  locked = false,
+  unread = false,
+  active = false,
+  id,
+}) => (
+  <Link
+    href={`/channels/${id}`}
     className={`flex items-center gap-2 pl-6 pr-2 py-0.5 rounded-md cursor-pointer text-[15px] ${
       active
         ? "bg-[#481349] text-white font-semibold"
@@ -84,52 +91,14 @@ const CreateChannelModal = ({ onClose, router }) => {
 
     setStatus("loading");
     setErrorMessage("");
+    const res = await createChannel(name, description, visibility === "public");
 
-    // try {
-      const res = await fetch("/api/channel", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name,
-          isPublic: visibility === "public",
-          description,
-        }),
-      });
-      console.log(res)
-      let payload = null;
-      try {
-        payload = await res.json();
-        console.log(payload)
-      } catch {}
-
-      if (!res.ok) {
-        const fallback =
-          res.status === 401
-            ? "You must be signed in to create a channel."
-            : res.status === 409
-              ? `A channel named "${cleanedName}" already exists.`
-              : res.status === 400
-                ? "Please check the channel details and try again."
-                : "Something went wrong. Please try again.";
-
-        setErrorMessage(payload?.error || fallback);
-        setStatus("error");
-        
-      }
-
-      setStatus("success");
-      router.push(`/channels/${payload.data.id}`)
-      setTimeout(() => {
-        onClose();
-      }, 900);
-    // } catch {
-    //   setErrorMessage(
-    //     "Couldn't reach the server. Check your connection and try again.",
-    //   );
-    //   setStatus("error");
-    // }
+   
+    setStatus("success");
+    router.push(`/channels/${res.id}`);
+    setTimeout(() => {
+      onClose();
+    }, 900);
   };
 
   return (
@@ -287,25 +256,24 @@ const CreateChannelModal = ({ onClose, router }) => {
 const ChannelsSidebar = () => {
   const [showModal, setShowModal] = useState(false);
   const [channels, setChannels] = useState([]);
-  const params = useParams()
-  const router = useRouter()
+  const params = useParams();
+  const router = useRouter();
   useEffect(() => {
-     const fetchChannels = async () => {
+    const fetchChannels = async () => {
       try {
         const res = await fetch("/api/user");
         const body = await res.json();
-          console.log(res)
+        console.log(res);
         if (!res.ok) {
           setChannelsError(body?.error || "Unable to load channels");
           return;
         }
- 
+
         setChannels(body.data ?? []);
-      } catch {
-      }
+      } catch {}
     };
- 
-    fetchChannels();  
+
+    fetchChannels();
   }, []);
   return (
     <div className="w-70 pb-10 shrink-0 bg-[#5E2C5f] text-white flex flex-col font-sans select-none relative overflow-x-hidden">
@@ -340,14 +308,19 @@ const ChannelsSidebar = () => {
               key={channel.id}
               label={channel.name}
               locked={!channel.isPublic}
-              active={channel.id==params?.id}
+              active={channel.id == params?.id}
               id={channel.id}
             />
           ))}
         </div>
       </div>
 
-      {showModal && <CreateChannelModal onClose={() => setShowModal(false)} router={router}/>}
+      {showModal && (
+        <CreateChannelModal
+          onClose={() => setShowModal(false)}
+          router={router}
+        />
+      )}
     </div>
   );
 };

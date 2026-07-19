@@ -7,7 +7,7 @@ export async function get_user() {
   const session_id = cookieStore.get("session_id")?.value;
   if (!session_id) return null;
 
-  const supabase = await createClient(cookieStore);
+  const supabase = createClient(cookieStore);
   const { data: session, error: sessionError } = await supabase
     .from("sessions")
     .select("user_id")

@@ -21,6 +21,7 @@ import { useParams } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { getCachedUser, loadUsers, loadUser } from "@/utils/auth/user-cache";
 import Image from "next/image";
+import { add, deleteChannel, join, leave } from "@/actions/channel";
 
 const ChannelHeader = ({ data, members, id }) => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -91,20 +92,7 @@ const ChannelHeader = ({ data, members, id }) => {
     setInviting(user.id);
 
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/channel/add`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ channel_id: id, member_id: user.id }),
-        },
-      );
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        alert(body.message || "Failed to invite user");
-        return;
-      }
+      const res = await add(id, user.id)
 
       setInviteResults((prev) => prev.filter((u) => u.id !== user.id));
     } catch (err) {
@@ -194,20 +182,7 @@ const ChannelHeader = ({ data, members, id }) => {
                       return;
 
                     try {
-                      const res = await fetch(
-                        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/channel/leave`,
-                        {
-                          method: "DELETE",
-                          headers: { channel_id: id },
-                        },
-                      );
-
-                      if (!res.ok) {
-                        const body = await res.json().catch(() => ({}));
-                        alert(body.message || "Failed to leave channel");
-                        return;
-                      }
-
+                      const res = await leave(id)
                       window.location.href = "/channels";
                     } catch (err) {
                       alert("Something went wrong");
@@ -450,21 +425,7 @@ const NotInChannel = ({ channelId, onJoined }) => {
     setError(null);
     console.log(channelId);
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/channel/join`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ channel_id: channelId }),
-        },
-      );
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        setError(body.message || "Failed to join channel");
-        setJoining(false);
-        return;
-      }
+      const res = await join(channelId)
 
       onJoined?.();
     } catch (err) {
@@ -494,10 +455,8 @@ const NotInChannel = ({ channelId, onJoined }) => {
 const PrivateChannelNotice = () => (
   <div className="flex-1 min-w-0 h-screen bg-white text-black flex flex-col items-center justify-center gap-2">
     <Lock className="size-6 text-[#8a8a8a]" />
-    <p className="text-[15px] font-semibold">This channel is private</p>
-    <p className="text-[13px] text-[#8a8a8a]">
-      You must be a member to view its content
-    </p>
+    <p className="text-[15px] font-semibold">This channel does not exists</p>
+    
   </div>
 );
 const Loading = () => (
@@ -558,11 +517,10 @@ const Page = () => {
   const [data, setData] = useState(null);
   const [members, setMembers] = useState([]);
   const [messages, setMessages] = useState([]);
-  const [isPrivate, setIsPrivate] = useState(false);
   const [inChannel, setInChannel] = useState(false);
   const [loading, setLoading] = useState(true);
   const [, forceRerender] = useState(0);
-
+  const [doesExist, setDoesExist] = useState(false)
   useEffect(() => {
     let cancelled = false;
     let channel = null;
@@ -570,7 +528,6 @@ const Page = () => {
 
     const fetchData = async () => {
       setLoading(true);
-      setIsPrivate(false);
       setMessages([]);
 
       const res = await fetch(
@@ -579,14 +536,13 @@ const Page = () => {
 
       if (cancelled) return;
 
-      if (res.status === 403) {
-        setData(null);
-        setMembers([]);
-        setIsPrivate(true);
-        setLoading(false);
+      
+      if (res.status === 404 && res.status === 403) {
+        setLoading(false)
+        setDoesExist(false);
         return;
       }
-
+      
       if (!res.ok) {
         setData(null);
         setMembers([]);
@@ -600,7 +556,7 @@ const Page = () => {
       setData(body.data);
       setMembers(body.members ?? []);
       setLoading(false);
-
+      setDoesExist(true)
       const { data: history } = await supabase
         .from("messages")
         .select("*")
@@ -645,12 +601,11 @@ const Page = () => {
       if (channel) supabase.removeChannel(channel);
     };
   }, [params.id]);
-  console.log(members);
   return (
     <>
       {!loading ? (
-        !loading && isPrivate ? (
-          <PrivateChannelNotice />
+        !loading && !doesExist ? (
+          <PrivateChannelNotice/>
         ) : (
           <MainChannel
             inChannel={inChannel}

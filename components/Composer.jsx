@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import "react-quill-new/dist/quill.snow.css";
 import Image from "next/image";
+import { send_message } from "@/actions/message";
 
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
 
@@ -108,10 +109,7 @@ const Composer = ({ channel_id, channel_name }) => {
     formData.append("to", channel_id);
     formData.append("type", "CHANNEL");
 
-    const res = await fetch("/api/messages", {
-      method: "POST",
-      body: formData,
-    });
+    const res = await send_message(formData)
 
     setValue("");
     setFiles([]);

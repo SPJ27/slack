@@ -1,4 +1,5 @@
 "use client";
+import { edit_user, get_user_info } from "@/actions/user";
 import Image from "next/image";
 import { NextResponse } from "next/server";
 import React, { useEffect, useState } from "react";
@@ -9,22 +10,15 @@ const page = () => {
   const handleSave = async () => {
     const formData = new FormData();
     formData.append("data", JSON.stringify(user));
-    const res = await fetch("/api/user/data", {
-      method: "POST",
-      body: formData,
-    });
-    const body = await res.json();
-    if (body.status === 200) {
-      setCurrent({ ...user });
-    }
+    const res = await edit_user(formData)
+    setCurrent({ ...user });
+    
   };
   useEffect(() => {
     const func = async () => {
-      const res = await fetch("/api/user/data");
-      const body = await res.json();
-      setCurrent(body.data);
-
-      setUser(body.data);
+      const body = await get_user_info()
+      setCurrent(body);
+      setUser(body);
     };
     func();
   }, []);
