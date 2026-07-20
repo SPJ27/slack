@@ -9,8 +9,9 @@ import {
 import { add_message } from "@/utils/db/message";
 import { remove_from_channel, in_channel } from "@/utils/db/user_data";
 import { get_user_id } from "@/utils/auth/get_user_id";
+import { ChannelData } from "@/types/ChannelData";
 
-export async function createChannel(name: string, description: string, isPublic: boolean) {
+export async function createChannel(name: string, description: string, isPublic: boolean): Promise<ChannelData> {
   if (name.trim().length === 0) {
     throw new Error("'channel name' cannot be empty");
   }
@@ -24,6 +25,7 @@ export async function createChannel(name: string, description: string, isPublic:
     isPublic,
     user.id,
   );
+    if (!data) throw new Error('Error')
   console.log(error);
   if (error) {
     if (error.code === "23505") {
@@ -57,7 +59,7 @@ export async function deleteChannel(channel_id: number) {
   }
 
   const { data, error } = await get_channel_data(channel_id);
-
+  if (!data) throw new Error('channel not found')
   if (data.isPublic == false && parseInt(data.created_by) !== user.id) {
     throw new Error("you dont have the perms to delete this channel");
   }
@@ -117,6 +119,7 @@ export async function join(channel_id: number) {
 
 export async function add(channel_id: number, member_id: number) {
   const user = await get_user()
+    if (!user) throw new Error('unauthenticated')
   const { data: channel, error: channelError } =
     await get_channel_data(channel_id);
 
@@ -139,7 +142,7 @@ export async function add(channel_id: number, member_id: number) {
   const { data: insertDefault, error: insertDefaultError } = await add_message({
     from: -101,
     to: channel_id,
-    message: `${member.displayName} was added to this channel`,
+    message: `${member?.displayName} was added to this channel`,
     type: "CHANNEL",
     app: true,
   });

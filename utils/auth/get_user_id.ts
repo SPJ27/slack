@@ -1,9 +1,9 @@
 "use server";
-import { UserJson } from "../../types/user";
+import { UserData } from "@/types/UserData";
 import { createClient } from "../supabase/server";
 import { cookies } from "next/headers";
 
-export async function get_user_id(id: number):Promise<UserJson>|null {
+export async function get_user_id(id: number):Promise<UserData | null> {
   const cookieStore = await cookies();
   const supabase = await createClient(cookieStore);
   const { data: user, error: userError } = await supabase
@@ -16,7 +16,7 @@ export async function get_user_id(id: number):Promise<UserJson>|null {
   return user;
 }
 
-export async function get_users_by_ids(ids:number[]):Promise<UserJson[]> {
+export async function get_users_by_ids(ids:number[]):Promise<UserData[] | null> {
   if (!ids || ids.length === 0) return [];
 
   const cookieStore = await cookies();

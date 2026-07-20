@@ -1,9 +1,9 @@
 "use server";
-import { UserJson } from "../../types/user";
+import { UserData } from "@/types/UserData";
 import { createClient } from "../supabase/server";
 import { cookies } from "next/headers";
 
-export async function get_user():Promise<UserJson> {
+export async function get_user():Promise<UserData | null> {
   const cookieStore = await cookies();
   const session_id = cookieStore.get("session_id")?.value;
   if (!session_id) return null;

@@ -1,9 +1,17 @@
 import { cookies } from "next/headers";
-import { createClient } from "../supabase/server";
-import { ChannelData } from "@/types/channel";
+import { createClient } from "@/utils/supabase/server";
+import { ChannelData } from "@/types/ChannelData";
 import { PostgrestError } from "@supabase/supabase-js";
+import { MembersData } from "@/types/MembersData";
 
-export async function get_channel_data(channel_id: number) {
+interface SupabaseChannelFormat {
+  data: ChannelData | null;
+  error: PostgrestError | null;
+}
+
+export async function get_channel_data(
+  channel_id: number,
+): Promise<SupabaseChannelFormat> {
   const supabase = await createClient(await cookies());
   const { data, error } = await supabase
     .from("channels")
@@ -18,7 +26,7 @@ export async function insert_channel_data(
   description: string,
   isPublic: boolean,
   created_by: number,
-) {
+): Promise<SupabaseChannelFormat> {
   const supabase = await createClient(await cookies());
   const { data, error } = await supabase
     .from("channels")
@@ -33,7 +41,9 @@ export async function insert_channel_data(
   return { data, error };
 }
 
-export async function get_channel_members(channel_id: number) {
+export async function get_channel_members(
+  channel_id: number,
+): Promise<MembersData[] | null> {
   const supabase = createClient(await cookies());
 
   const { data } = await supabase
@@ -41,10 +51,13 @@ export async function get_channel_members(channel_id: number) {
     .select()
     .eq("channel_id", channel_id);
 
-  return data;
+  return data ?? null;
 }
 
-export async function add_to_channel(channel_id: number, user_id: number) {
+export async function add_to_channel(
+  channel_id: number,
+  user_id: number,
+): Promise<PostgrestError | null> {
   const supabase = await createClient(await cookies());
   const { error: insertError } = await supabase
     .from("channel_members")
@@ -52,7 +65,10 @@ export async function add_to_channel(channel_id: number, user_id: number) {
   return insertError;
 }
 
-export async function search_channels(search: string):Promise<{data: {id: number, name: string}[] | null, error: PostgrestError | null}> {
+export async function search_channels(search: string): Promise<{
+  data: { id: number; name: string }[] | null;
+  error: PostgrestError | null;
+}> {
   const supabase = await createClient(await cookies());
   const { data, error } = await supabase
     .from("channels")
@@ -63,11 +79,13 @@ export async function search_channels(search: string):Promise<{data: {id: number
   return { data, error };
 }
 
-export async function remove_channel(channel_id: number):Promise<{data: ChannelData | null, error: PostgrestError | null}> {
+export async function remove_channel(
+  channel_id: number,
+): Promise<{ data: ChannelData | null; error: PostgrestError | null }> {
   const supabase = await createClient(await cookies());
   const { data, error } = await supabase
     .from("channels")
     .delete()
-    .eq("id", channel_id)
+    .eq("id", channel_id);
   return { data, error };
 }

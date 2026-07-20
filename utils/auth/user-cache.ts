@@ -1,15 +1,19 @@
 import { get_user_id, get_users_by_ids } from "@/utils/auth/get_user_id";
 
 interface CachedUser {
-  id: number;
-  displayName: string;
-  profilePicture: string;
+  id: number,
+  name: string,
+  email: string,
+  displayName: string,
+  profilePicture: string,
+  created_at: string,
+  desc: string
 }
 
 const cache = new Map<number, CachedUser>();
 const inFlight = new Map<number, Promise<void>>();
 
-export function getCachedUser(uid: number): CachedUser | undefined {
+export function getCachedUser(uid: number): CachedUser | undefined{
   console.log("uid", uid);
   if (uid === -101) {
     return {
@@ -17,6 +21,10 @@ export function getCachedUser(uid: number): CachedUser | undefined {
       displayName: "Slack Info",
       profilePicture:
         "https://i.pinimg.com/736x/7d/d6/17/7dd61762f78848ecef51f5c2e58add0d.jpg",
+      name: 'Slack Info',
+      email: '',
+      created_at: '',
+      desc: 'App'
     };
   }
   return cache.get(uid);
@@ -30,7 +38,7 @@ export async function loadUsers(uids: number[]): Promise<void> {
 
   if (missing.length > 0) {
     const promise: Promise<void> = get_users_by_ids(missing).then((users) => {
-      users.forEach((u) => cache.set(u.id, u));
+      users?.forEach((u) => cache.set(u.id, u));
       missing.forEach((uid) => inFlight.delete(uid));
     });
     missing.forEach((uid) => inFlight.set(uid, promise));
