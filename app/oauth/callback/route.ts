@@ -119,5 +119,5 @@ export async function GET(request: NextRequest) {
     return Response.json({ error: message }, { status: 500 });
   }
 
-  return NextResponse.redirect(new URL("/home", request.url));
+  return NextResponse.redirect(new URL("/channels", request.url));
 }
