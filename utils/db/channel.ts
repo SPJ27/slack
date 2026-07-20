@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { createClient } from "../supabase/server";
+import { createClient } from "@/utils/supabase/server";
 import { ChannelData } from "@/types/ChannelData";
 import { PostgrestError } from "@supabase/supabase-js";
 import { MembersData } from "@/types/MembersData";

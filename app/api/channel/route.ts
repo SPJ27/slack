@@ -2,7 +2,6 @@ import { get_user } from "@/utils/auth/get_user";
 import {
   get_channel_data,
   get_channel_members,
-  remove_channel,
 } from "@/utils/db/channel";
 import { createClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";

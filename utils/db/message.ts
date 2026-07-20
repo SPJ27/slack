@@ -1,9 +1,9 @@
 import { cookies } from "next/headers";
-import { createClient } from "../supabase/server";
+import { createClient } from "@/utils/supabase/server";
 
 interface AddMessageParams {
   from: number;
-  to: number;
+  to: number;   
   message: string;
   attachments?: string[] | null;
   reply_to?: number | null;

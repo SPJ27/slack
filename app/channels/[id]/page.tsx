@@ -201,7 +201,10 @@ const ChannelHeader = ({ data, members, id }: ChannelHeaderProps) => {
 
                 <button
                   onClick={async () => {
-                    if (!confirm("Are you sure you want to leave this channel?")) return;
+                    if (
+                      !confirm("Are you sure you want to leave this channel?")
+                    )
+                      return;
 
                     try {
                       await leave(id);
@@ -218,7 +221,10 @@ const ChannelHeader = ({ data, members, id }: ChannelHeaderProps) => {
 
                 <button
                   onClick={async () => {
-                    if (!confirm("Are you sure you want to delete this channel?")) return;
+                    if (
+                      !confirm("Are you sure you want to delete this channel?")
+                    )
+                      return;
 
                     try {
                       await deleteChannel(id);
@@ -257,9 +263,13 @@ const ChannelHeader = ({ data, members, id }: ChannelHeaderProps) => {
 
                 <div className="max-h-64 overflow-y-auto">
                   {inviteLoading ? (
-                    <div className="px-4 py-2 text-sm text-gray-400">Searching...</div>
+                    <div className="px-4 py-2 text-sm text-gray-400">
+                      Searching...
+                    </div>
                   ) : inviteQuery.trim() && inviteResults.length === 0 ? (
-                    <div className="px-4 py-2 text-sm text-gray-400">No people found</div>
+                    <div className="px-4 py-2 text-sm text-gray-400">
+                      No people found
+                    </div>
                   ) : (
                     inviteResults.slice(0, 7).map((user) => (
                       <button
@@ -275,9 +285,13 @@ const ChannelHeader = ({ data, members, id }: ChannelHeaderProps) => {
                           height={28}
                           className="size-7 rounded-sm object-cover shrink-0"
                         />
-                        <span className="truncate flex-1 text-left">{user.displayName}</span>
+                        <span className="truncate flex-1 text-left">
+                          {user.displayName}
+                        </span>
                         {inviting === user.id && (
-                          <span className="text-xs text-gray-400 shrink-0">Inviting...</span>
+                          <span className="text-xs text-gray-400 shrink-0">
+                            Inviting...
+                          </span>
                         )}
                       </button>
                     ))
@@ -298,7 +312,13 @@ interface AvatarProps {
 const Avatar = ({
   pfp = "https://images.seeklogo.com/logo-png/49/2/slack-logo-png_seeklogo-496177.png",
 }: AvatarProps) => (
-  <Image alt="pfp" src={pfp} className="size-8 mt-1 rounded-md" width={9} height={9} />
+  <Image
+    alt="pfp"
+    src={pfp}
+    className="size-8 mt-1 rounded-md"
+    width={9}
+    height={9}
+  />
 );
 
 interface SimpleMessageProps {
@@ -372,33 +392,42 @@ const SimpleMessage = ({
 
       {attachments && attachments.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-3">
-         {attachments.map((url, index) => {
-  const isImage = /\.(png|jpe?g|gif|webp|svg|avif)$/i.test(url);
+          {attachments.map((url, index) => {
+            const isImage = /\.(png|jpe?g|gif|webp|svg|avif)$/i.test(url);
 
-  return isImage ? (
-    <a key={index} href={url} target="_blank" rel="noopener noreferrer">
-      <img src={url} alt="" className="max-w-xs rounded-sm hover:opacity-99" />
-    </a>
-  ) : (
-    <a
-      key={index}
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="flex items-center gap-2 rounded-sm border border-gray-300 bg-white px-3 py-1.5 w-64 hover:bg-neutral-50"
-    >
-      <File className="size-6 text-gray-400 shrink-0" />
+            return isImage ? (
+              <a
+                key={index}
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <img
+                  src={url}
+                  alt=""
+                  className="max-w-xs rounded-sm hover:opacity-99"
+                />
+              </a>
+            ) : (
+              <a
+                key={index}
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 rounded-sm border border-gray-300 bg-white px-3 py-1.5 w-64 hover:bg-neutral-50"
+              >
+                <File className="size-6 text-gray-400 shrink-0" />
 
-      <div className="min-w-0">
-        <p className="truncate text-sm font-medium">
-          {decodeURIComponent(url.split("/").pop() ?? "")}
-        </p>
-        <p className="text-xs text-gray-400">Open attachment</p>
-      </div>
-    </a>
-  );
-})}
-         </div>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium">
+                    {decodeURIComponent(url.split("/").pop() ?? "")}
+                  </p>
+                  <p className="text-xs text-gray-400">Open attachment</p>
+                </div>
+              </a>
+            );
+          })}
+        </div>
       )}
     </div>
   </div>
@@ -448,7 +477,9 @@ const NotInChannel = ({ channelId, onJoined }: NotInChannelProps) => {
       >
         {joining ? "Joining..." : "Join the channel"}
       </button>
-      {error && <p className="text-center text-[13px] text-red-500 mt-1">{error}</p>}
+      {error && (
+        <p className="text-center text-[13px] text-red-500 mt-1">{error}</p>
+      )}
     </div>
   );
 };
@@ -473,12 +504,20 @@ interface MainChannelProps {
   messages: Message[];
   inChannel: boolean;
   onJoined: () => void;
+  messagesEndRef: React.RefObject<HTMLDivElement | null>;
 }
-
-const MainChannel = ({ data, members, id, messages, inChannel, onJoined }: MainChannelProps) => (
+const MainChannel = ({
+  data,
+  members,
+  id,
+  messages,
+  inChannel,
+  onJoined,
+  messagesEndRef
+}: MainChannelProps) => (
   <div className="flex-1 min-w-0 h-screen bg-white text-black flex flex-col min-h-0">
     <ChannelHeader data={data} members={members} id={id} />
-    <div className="flex-1 min-h-0 overflow-y-auto py-2">
+    <div ref={messagesEndRef} className="flex-1 min-h-0 overflow-y-auto py-2">
       <NewDivider />
       {messages.map((m, i) => {
         const cachedUser = getCachedUser(m.from);
@@ -511,6 +550,7 @@ const MainChannel = ({ data, members, id, messages, inChannel, onJoined }: MainC
           />
         );
       })}
+
     </div>
     {inChannel ? (
       <Composer channel_id={id} channel_name={data.name} />
@@ -532,7 +572,8 @@ const Page = () => {
 
   useEffect(() => {
     let cancelled = false;
-    let channel: ReturnType<ReturnType<typeof createClient>["channel"]> | null = null;
+    let channel: ReturnType<ReturnType<typeof createClient>["channel"]> | null =
+      null;
     const supabase = createClient();
 
     const fetchData = async () => {
@@ -612,6 +653,19 @@ const Page = () => {
     };
   }, [params.id]);
 
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+  const el = messagesEndRef.current;
+  if (el) {
+    el.scrollTop = el.scrollHeight;
+  }
+};
+
+useEffect(() => {
+  scrollToBottom();
+}, [messages]);
+
   return (
     <>
       {!loading ? (
@@ -625,6 +679,7 @@ const Page = () => {
             id={Number(params.id)}
             messages={messages}
             onJoined={() => setInChannel(true)}
+            messagesEndRef={messagesEndRef}
           />
         )
       ) : (

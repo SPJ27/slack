@@ -1,5 +1,4 @@
 import { search_channels } from "@/utils/db/channel";
-import { search_users } from "@/utils/db/user_data";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest):Promise<NextResponse> {

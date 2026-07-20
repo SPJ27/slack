@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/hover-card";
 import { UserData } from "@/types/UserData";
 
-export default function UserHoverCard({ user, children }:{user: UserData, children: React.ReactNode}) {
+export default function UserHoverCard({ user, children }:{user: UserData | undefined, children: React.ReactNode}) {
   return (
     <HoverCard openDelay={200}>
       <HoverCardTrigger asChild>{children}</HoverCardTrigger>
@@ -15,8 +15,8 @@ export default function UserHoverCard({ user, children }:{user: UserData, childr
         <div className="flex flex-col gap-4">
           <div className="flex gap-3">
             <Image
-              src={user?.profilePicture}
-              alt={user?.displayName}
+              src={user?.profilePicture || ''}
+              alt={user?.displayName || ''}
               width={56}
               height={56}
               className="size-14 rounded-xl object-cover"

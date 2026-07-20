@@ -4,18 +4,21 @@ import { createClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
 import { UserData } from "@/types/UserData";
 
-export async function get_user_info():Promise<UserData | null> {
+export async function get_user_info(): Promise<UserData | null> {
   const user = await get_user();
   return user;
 }
 
 export async function edit_user(formData: FormData): Promise<void> {
-  const user:UserData | null = await get_user();
-  const rawData = formData.get("data")
-  if (typeof rawData !== "string") throw new Error('rawData must be a string')
-  const data:Record<string, unknown> = JSON.parse(rawData);
+  const user: UserData | null = await get_user();
+  const rawData = formData.get("data");
+  if (typeof rawData !== "string") throw new Error("rawData must be a string");
+  const data: Record<string, unknown> = JSON.parse(rawData);
   const supabase = createClient(await cookies());
-  const { error } = await supabase.from("users").update(data).eq("id", user?.id);
+  const { error } = await supabase
+    .from("users")
+    .update(data)
+    .eq("id", user?.id);
 
   if (error) {
     throw new Error("Error fetching data");

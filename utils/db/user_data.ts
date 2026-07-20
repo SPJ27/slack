@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { createClient } from "../supabase/server";
+import { createClient } from "@/utils/supabase/server";
 import { PostgrestError } from "@supabase/supabase-js";
 
 type UserSearch = {
@@ -43,4 +43,9 @@ export async function in_channel(channel_id: number, user_id: number) {
     .eq("channel_id", channel_id)
     .eq("user_id", user_id);
   return data ? true : false
+}
+
+export async function all_direct_messages(user_id: number){
+  const supabase = createClient(await cookies())
+  
 }
