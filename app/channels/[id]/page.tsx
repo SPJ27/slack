@@ -433,14 +433,12 @@ const SimpleMessage = ({
   </div>
 );
 
-const NewDivider = () => (
+const NewDivider = ({date = "Today"}: {date?: string}) => (
   <div className="flex items-center px-4 my-1">
-    <div className="border-t border-[#e0522f] flex-1" />
-    <button className="mx-2 text-[13px] font-semibold text-[#8a8a8a] flex items-center gap-1 border border-black/10 rounded-full px-2 py-0.5">
-      Today <ChevronDown className="size-3.5" />
+    <div className="border-t border-[#e0522f]" />
+    <button className=" text-[13px] mx-auto font-semibold text-[#8a8a8a] flex items-center gap-1 border border-black/10 rounded-full px-6 py-0.5">
+      {date}
     </button>
-    <div className="border-t border-[#e0522f] flex-1" />
-    <span className="ml-2 text-[12px] font-bold text-[#e0522f]">New</span>
   </div>
 );
 
@@ -496,7 +494,26 @@ const Loading = () => (
     <p className="text-[15px] font-semibold">Loading...</p>
   </div>
 );
+function formatDateLabel(dateStr: string): string {
+  const date = new Date(dateStr);
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
 
+  const isSameDay = (a: Date, b: Date) =>
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate();
+
+  if (isSameDay(date, today)) return "Today";
+  if (isSameDay(date, yesterday)) return "Yesterday";
+
+  return date.toLocaleDateString([], {
+    month: "long",
+    day: "numeric",
+    year: date.getFullYear() !== today.getFullYear() ? "numeric" : undefined,
+  });
+}
 interface MainChannelProps {
   data: ChannelData;
   members: UserData[];
@@ -518,7 +535,6 @@ const MainChannel = ({
   <div className="flex-1 min-w-0 h-screen bg-white text-black flex flex-col min-h-0">
     <ChannelHeader data={data} members={members} id={id} />
     <div ref={messagesEndRef} className="flex-1 min-h-0 overflow-y-auto py-2">
-      <NewDivider />
       {messages.map((m, i) => {
         const cachedUser = getCachedUser(m.from);
         const prev = messages[i > 1 ? i - 1 : 0];
@@ -528,32 +544,38 @@ const MainChannel = ({
         );
         const prevTime = new Date(new Date(prev.created_at).getTime());
 
+        const currentDateLabel = formatDateLabel(m.created_at);
+        const prevDateLabel = i > 0 ? formatDateLabel(messages[i - 1].created_at) : null;
+        const showDivider = i === 0 || currentDateLabel !== prevDateLabel;
+
         return (
-          <SimpleMessage
-            key={m.id}
-            user={cachedUser}
-            name={cachedUser?.displayName ?? "..."}
-            time={new Date(m.created_at).toLocaleTimeString([], {
-              hour: "numeric",
-              minute: "2-digit",
-            })}
-            text={m.message}
-            pfp={cachedUser?.profilePicture}
-            special={m.from === -101}
-            attachments={m.attachments}
-            app={m.app}
-            isSame={
-              cachedUser?.id == prevUser?.id &&
-              fiveMinutesEarlier < prevTime &&
-              i !== 0
-            }
-          />
+          <div key={m.id}>
+            {showDivider && <NewDivider date={currentDateLabel} />}
+            <SimpleMessage
+              user={cachedUser}
+              name={cachedUser?.displayName ?? "..."}
+              time={new Date(m.created_at).toLocaleTimeString([], {
+                hour: "numeric",
+                minute: "2-digit",
+              })}
+              text={m.message}
+              pfp={cachedUser?.profilePicture}
+              special={m.from === -101}
+              attachments={m.attachments}
+              app={m.app}
+              isSame={
+                cachedUser?.id == prevUser?.id &&
+                fiveMinutesEarlier < prevTime &&
+                i !== 0 &&
+                !showDivider 
+              }
+            />
+          </div>
         );
       })}
-
     </div>
     {inChannel ? (
-      <Composer channel_id={id} channel_name={data.name} />
+      <Composer id={id} name={data.name} type="CHANNEL"/>
     ) : (
       <NotInChannel channelId={id} onJoined={onJoined} />
     )}

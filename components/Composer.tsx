@@ -81,11 +81,12 @@ const QuillToolbar = ({ onFormat, activeFormats }: QuillToolbarProps) => {
 };
 
 interface ComposerProps {
-  channel_id: number;
-  channel_name: string;
+  id: number;
+  name: string;
+  type: string
 }
 
-const Composer = ({ channel_id, channel_name }: ComposerProps) => {
+const Composer = ({ id, name, type='CHANNEL' }: ComposerProps) => {
   const [value, setValue] = useState("");
   const [activeFormats, setActiveFormats] = useState<ActiveFormats>({});
   const quillRef = useRef<ReactQuillType | null>(null);
@@ -119,18 +120,18 @@ const Composer = ({ channel_id, channel_name }: ComposerProps) => {
     const text = value.replace(/<(.|\n)*?>/g, "").trim();
     if (!text) return;
 
+    setValue("");
+    setFiles([]);
     const formData = new FormData();
     formData.append("message", value);
     files.forEach((file) => {
       formData.append("attachments", file);
     });
-    formData.append("to", String(channel_id));
-    formData.append("type", "CHANNEL");
+    formData.append("to", String(id));
+    formData.append("type", type);
 
     await send_message(formData);
 
-    setValue("");
-    setFiles([]);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -159,7 +160,7 @@ const Composer = ({ channel_id, channel_name }: ComposerProps) => {
           onChange={setValue}
           onChangeSelection={refreshActiveFormats}
           modules={quillModules}
-          placeholder={`Message #${channel_name}`}
+          placeholder={`Message #${name}`}
           className="composer-quill"
         />
       </div>

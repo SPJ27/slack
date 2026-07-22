@@ -101,6 +101,9 @@ export async function join(channel_id: number) {
   if (!channel.isPublic) {
     throw new Error("cannot join private channels");
   }
+  const inChannel = await in_channel(channel_id, user.id);
+
+  if (inChannel) throw new Error("already in channel");
 
   const insertError = await add_to_channel(channel_id, user.id);
 

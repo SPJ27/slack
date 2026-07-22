@@ -9,7 +9,7 @@ export async function send_message(body: FormData): Promise<void> {
   const attachments = body.getAll("attachments");
   const reply_to = body.get("reply_to");
   const type = body.get("type");
-
+  console.log(to, type)
   if (typeof to !== "string" || typeof message !== "string" || typeof type !== "string") {
     throw new Error("Missing or invalid required fields");
   }
@@ -37,6 +37,7 @@ export async function send_message(body: FormData): Promise<void> {
   }
 
   if (type === "CHANNEL") {
+    console.log(to, user.id)
     const userInChannel = await in_channel(Number(to), user.id);
     if (!userInChannel) {
       throw new Error("not in channel");
