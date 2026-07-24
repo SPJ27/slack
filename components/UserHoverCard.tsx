@@ -5,6 +5,7 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { UserData } from "@/types/UserData";
+import Link from "next/link";
 
 export default function UserHoverCard({ user, children }:{user: UserData | undefined, children: React.ReactNode}) {
   return (
@@ -19,7 +20,7 @@ export default function UserHoverCard({ user, children }:{user: UserData | undef
               alt={user?.displayName || ''}
               width={56}
               height={56}
-              className="size-14 rounded-xl object-cover"
+              className="size-14 rounded-sm object-cover"
             />
 
             <div className="flex-1 min-w-0">
@@ -47,9 +48,9 @@ export default function UserHoverCard({ user, children }:{user: UserData | undef
             )}
           </div>
 
-          <button className="w-full rounded-md bg-[#007a5a] py-2 text-sm font-medium text-white hover:bg-[#00694d]">
+          <Link href={`/dm/${user?.id}`} className="w-full text-center rounded-md bg-[#007a5a] py-2 text-sm font-medium text-white hover:bg-[#00694d]">
             Message
-          </button>
+          </Link>
         </div>
       </HoverCardContent>
     </HoverCard>

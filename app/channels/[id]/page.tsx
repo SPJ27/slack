@@ -25,17 +25,8 @@ import { add, deleteChannel, join, leave } from "@/actions/channel";
 import { ChannelData } from "@/types/ChannelData";
 import { UserData } from "@/types/UserData";
 import { RealtimePostgresInsertPayload } from "@supabase/supabase-js";
+import { Message, SimpleMessageInterface } from "@/types/Message";
 
-interface Message {
-  id: number;
-  from: number;
-  to: number;
-  message: string;
-  created_at: string;
-  attachments: string[] | null;
-  app: boolean;
-  type: string;
-}
 
 interface InviteUser {
   id: number;
@@ -321,17 +312,6 @@ const Avatar = ({
   />
 );
 
-interface SimpleMessageProps {
-  name: string;
-  time: string;
-  text: string;
-  pfp?: string;
-  special: boolean;
-  isSame: boolean;
-  user: UserData | undefined;
-  attachments: string[] | null;
-  app: boolean;
-}
 
 const SimpleMessage = ({
   name,
@@ -343,7 +323,7 @@ const SimpleMessage = ({
   user,
   attachments,
   app,
-}: SimpleMessageProps) => (
+}: SimpleMessageInterface) => (
   <div className="flex gap-2 px-4 py-1 hover:bg-black/[0.03]">
     {!isSame ? (
       <UserHoverCard user={user}>

@@ -40,17 +40,15 @@ export async function remove_from_channel(
   return { data, error };
 }
 
-export async function in_channel(channel_id: number, user_id: number) {
+export async function in_channel(channel_id: number, user_id: number): Promise<boolean> {
   const supabase = await createClient(await cookies());
-  const { data, error } = await supabase
+  const { count, error } = await supabase
     .from("channel_members")
-    .select()
+    .select("*", { count: "exact", head: true })
     .eq("channel_id", channel_id)
-    .eq("user_id", user_id)
-    .single();
-  return data !== null ? true : false;
+    .eq("user_id", user_id);
+  return !error && (count ?? 0) > 0;
 }
-
 type Message = {
   message: string;
   to: number;

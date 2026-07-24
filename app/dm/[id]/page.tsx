@@ -25,17 +25,8 @@ import { add, deleteChannel, join, leave } from "@/actions/channel";
 import { ChannelData } from "@/types/ChannelData";
 import { UserData } from "@/types/UserData";
 import { RealtimePostgresInsertPayload } from "@supabase/supabase-js";
-
-interface Message {
-  id: number;
-  from: number;
-  to: number;
-  message: string;
-  created_at: string;
-  attachments: string[] | null;
-  app: boolean;
-  type: string;
-}
+import { Message, SimpleMessageInterface } from "@/types/Message";
+import { get_user } from "@/utils/auth/get_user";
 
 interface InviteUser {
   id: number;
@@ -44,7 +35,7 @@ interface InviteUser {
 }
 
 interface ChannelHeaderProps {
-  data: ChannelData;
+  data: UserData;
 }
 
 const ChannelHeader = ({ data }: ChannelHeaderProps) => {
@@ -53,22 +44,22 @@ const ChannelHeader = ({ data }: ChannelHeaderProps) => {
       <div className="flex items-center gap-2 min-w-0">
         <Star className="size-4 text-[#8a8a8a] shrink-0" />
 
-        <span className="font-bold text-[17px] flex items-center gap-1 shrink-0">
-          {data.isPublic ? (
-            <Hash className="size-4" />
-          ) : (
-            <Lock className="size-4" />
+        <span className="font-semibold text-[17px] flex items-center gap-2 shrink-0">
+          {data.profilePicture && (
+            <Image
+              alt=""
+              src={data.profilePicture}
+              height={9}
+              width={9}
+              className="size-8 rounded-md"
+            />
           )}
           {data?.name}
         </span>
-
       </div>
 
       <div className="flex items-center gap-4 shrink-0">
-        <div className="flex items-center -space-x-2">
-         
-        </div>
-
+        <div className="flex items-center -space-x-2"></div>
       </div>
     </div>
   );
@@ -90,30 +81,17 @@ const Avatar = ({
   />
 );
 
-interface SimpleMessageProps {
-  name: string;
-  time: string;
-  text: string;
-  pfp?: string;
-  special: boolean;
-  isSame: boolean;
-  user: UserData | undefined;
-  attachments: string[] | null;
-  app: boolean;
-}
-
 const SimpleMessage = ({
   name,
   time,
   text,
   pfp,
-  special,
   isSame,
   user,
   attachments,
   app,
-}: SimpleMessageProps) => (
-  <div className="flex gap-2 px-4 py-1 hover:bg-black/[0.03]">
+}: SimpleMessageInterface) => (
+  <div className="flex gap-2 px-4 py-1 hover:bg-black/3">
     {!isSame ? (
       <UserHoverCard user={user}>
         <div>
@@ -127,37 +105,20 @@ const SimpleMessage = ({
     <div className="min-w-0">
       {!isSame && (
         <div className="flex items-baseline gap-2">
-          {!special ? (
-            <UserHoverCard user={user}>
-              <span className="font-semibold text-[15px] cursor-pointer hover:underline items-center flex">
-                {name}{" "}
-              </span>
-            </UserHoverCard>
-          ) : (
-            <span className="font-semibold text-[15px]  items-center flex">
+          <UserHoverCard user={user}>
+            <span className="font-semibold text-[15px] cursor-pointer hover:underline items-center flex">
               {name}{" "}
-              {app ? (
-                <span className="text-[11px] px-1 py bg-neutral-500 rounded-xs ml-1.5  text-white">
-                  APP
-                </span>
-              ) : (
-                ""
-              )}
             </span>
-          )}
+          </UserHoverCard>
 
           <span className="text-[12px] text-[#8a8a8a]">{time}</span>
         </div>
       )}
 
-      {special ? (
-        <div className="text-neutral-500 text-sm">{text}</div>
-      ) : (
-        <div
-          dangerouslySetInnerHTML={{ __html: text }}
-          className="text-[15px] font-normal leading-[1.45] tracking-[0.01em] text-[#1d1c1d] antialiased"
-        />
-      )}
+      <div
+        dangerouslySetInnerHTML={{ __html: text }}
+        className="text-[15px] font-normal leading-[1.45] tracking-[0.01em] text-[#1d1c1d] antialiased"
+      />
 
       {attachments && attachments.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-3">
@@ -213,53 +174,6 @@ const NewDivider = () => (
   </div>
 );
 
-interface NotInChannelProps {
-  channelId: number;
-  onJoined?: () => void;
-}
-
-const NotInChannel = ({ channelId, onJoined }: NotInChannelProps) => {
-  const [joining, setJoining] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleJoin = async () => {
-    setJoining(true);
-    setError(null);
-
-    try {
-      await join(channelId);
-      onJoined?.();
-    } catch (err) {
-      setError("Failed to join channel");
-    } finally {
-      setJoining(false);
-    }
-  };
-
-  return (
-    <div className="px-6 py-3 mb-13 border text-lg border-gray-400 max-w-xl mx-auto rounded-md">
-      You need to join this channel to reply :)
-      <button
-        className="block text-sm mx-auto bg-green-700 px-3 py-1 mt-1 text-white disabled:opacity-50"
-        onClick={handleJoin}
-        disabled={joining}
-      >
-        {joining ? "Joining..." : "Join the channel"}
-      </button>
-      {error && (
-        <p className="text-center text-[13px] text-red-500 mt-1">{error}</p>
-      )}
-    </div>
-  );
-};
-
-const PrivateChannelNotice = () => (
-  <div className="flex-1 min-w-0 h-screen bg-white text-black flex flex-col items-center justify-center gap-2">
-    <Lock className="size-6 text-[#8a8a8a]" />
-    <p className="text-[15px] font-semibold">This channel does not exists</p>
-  </div>
-);
-
 const Loading = () => (
   <div className="flex-1 min-w-0 h-screen bg-white text-black flex flex-col items-center justify-center gap-2">
     <p className="text-[15px] font-semibold">Loading...</p>
@@ -267,7 +181,7 @@ const Loading = () => (
 );
 
 interface MainChannelProps {
-  data: ChannelData;
+  data: UserData;
   id: number;
   messages: Message[];
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
@@ -275,8 +189,8 @@ interface MainChannelProps {
 const MainChannel = ({
   data,
   id,
-  messages,  
-  messagesEndRef
+  messages,
+  messagesEndRef,
 }: MainChannelProps) => (
   <div className="flex-1 min-w-0 h-screen bg-white text-black flex flex-col min-h-0">
     <ChannelHeader data={data} />
@@ -313,19 +227,18 @@ const MainChannel = ({
           />
         );
       })}
-
     </div>
-      <Composer id={id} name={data.name} type='DM'/>
-  
+    <Composer id={id} name={data.name} type="DM" />
   </div>
 );
 
 const Page = () => {
   const params = useParams<{ id: string }>();
-  const [data, setData] = useState<ChannelData | null>(null);
+  const [data, setData] = useState<UserData | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [, forceRerender] = useState(0);
+  const [user, setUser] = useState<UserData | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -336,7 +249,9 @@ const Page = () => {
     const fetchData = async () => {
       setLoading(true);
       setMessages([]);
-
+      const user = await get_user();
+      console.log(user);
+      setUser(user);
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/dm?id=${params.id}`,
       );
@@ -358,12 +273,14 @@ const Page = () => {
       if (cancelled) return;
       setData(body.data);
       setLoading(false);
-  
+      console.log(user?.id, params?.id);
       const { data: history } = await supabase
         .from("messages")
         .select("*")
         .eq("type", "DM")
-        .eq("to", params.id)
+        .or(
+          `and(to.eq.${user?.id},from.eq.${params.id}),and(from.eq.${user?.id},to.eq.${params.id})`,
+        )
         .order("created_at", { ascending: true });
 
       if (cancelled) return;
@@ -380,17 +297,24 @@ const Page = () => {
             event: "INSERT",
             schema: "public",
             table: "messages",
-            filter: `to=eq.${params.id}`,
           },
           (payload: RealtimePostgresInsertPayload<Message>) => {
             const newMessage = payload.new as Message;
+            console.log("new message", newMessage);
             if (newMessage.type !== "DM") return;
-            setMessages((prev) => [...prev, newMessage]);
+            if (
+              (newMessage.from == user?.id &&
+                newMessage.to == Number(params?.id)) ||
+              (newMessage.to == user?.id &&
+                newMessage.from == Number(params?.id))
+            ) {
+              setMessages((prev) => [...prev, newMessage]);
 
-            if (!getCachedUser(newMessage.from)) {
-              loadUser(newMessage.from).then(() => {
-                if (!cancelled) forceRerender((n) => n + 1);
-              });
+              if (!getCachedUser(newMessage.from)) {
+                loadUser(newMessage.from).then(() => {
+                  if (!cancelled) forceRerender((n) => n + 1);
+                });
+              }
             }
           },
         )
@@ -408,24 +332,24 @@ const Page = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-  const el = messagesEndRef.current;
-  if (el) {
-    el.scrollTop = el.scrollHeight;
-  }
-};
+    const el = messagesEndRef.current;
+    if (el) {
+      el.scrollTop = el.scrollHeight;
+    }
+  };
 
-useEffect(() => {
-  scrollToBottom();
-}, [messages]);
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   return (
     <>
-          <MainChannel
-            data={data ?? ({} as ChannelData)}
-            id={Number(params.id)}
-            messages={messages}
-            messagesEndRef={messagesEndRef}
-          />
+      <MainChannel
+        data={data ?? ({} as UserData)}
+        id={Number(params.id)}
+        messages={messages}
+        messagesEndRef={messagesEndRef}
+      />
     </>
   );
 };

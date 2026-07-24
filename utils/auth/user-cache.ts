@@ -20,7 +20,7 @@ export function getCachedUser(uid: number): CachedUser | undefined{
       id: -101,
       displayName: "Slack Info",
       profilePicture:
-        "https://i.pinimg.com/736x/7d/d6/17/7dd61762f78848ecef51f5c2e58add0d.jpg",
+        "/image.png",
       name: 'Slack Info',
       email: '',
       created_at: '',

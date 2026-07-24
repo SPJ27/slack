@@ -4,6 +4,7 @@ import { Hash, Search, Lock } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 
 interface SearchResult {
   id: number;
@@ -67,7 +68,8 @@ export default function TopBar() {
   const [query, setQuery] = useState<string>("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-
+  const url = usePathname()
+  if (url == '/' || url == '') return <></>
   const cache = useRef(new Map<string, SearchResult[]>());
   const wrapperRef = useRef<HTMLDivElement>(null);
 
@@ -116,7 +118,7 @@ export default function TopBar() {
   return (
     <div className="h-10 shrink-0 bg-[#481349] flex items-center px-3 text-white">
       <div className="flex-1 flex justify-center">
-        <div ref={wrapperRef} className="relative w-[420px]">
+        <div ref={wrapperRef} className="relative w-105">
           <div className="flex items-center gap-2 bg-white/10 hover:bg-white/15 rounded-md px-3 py-1.5">
             <Search className="size-4 shrink-0" />
 

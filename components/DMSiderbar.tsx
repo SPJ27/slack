@@ -66,10 +66,10 @@ const UserItem = ({
           className="size-10 rounded-md shrink-0 object-cover"
         />
         <div className="min-w-0 flex-1">
-          <p className={`text-md font-semibold text-neutral-300`}>
+          <p className={`text-md font-normal text-neutral-300`}>
             {displayName}
           </p>
-          <div className="text-[15px] font-normal leading-[1.45] tracking-[0.01em] text-neutral-200 antialiased">
+          <div className="text-[15px] font-light leading-[1.45] tracking-[0.01em] text-neutral-200 antialiased">
             {truncateHtmlToText(message, 15)}
           </div>
         </div>
@@ -85,9 +85,10 @@ const DMSidebar = () => {
   useEffect(() => {
     const fetchChannels = async () => {
       // try {
-      const res = await fetch("/api/dm/all");
+      const res = await fetch(`/api/dm/all`);
+      
       const body = await res.json();
-
+console.log(body)
       if (!res.ok) {
         // setChannelsError(body?.error || "Unable to load channels");
         return;

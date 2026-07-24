@@ -3,26 +3,20 @@ import { UserData } from "@/types/UserData";
 import { createClient } from "../supabase/server";
 import { cookies } from "next/headers";
 
-export async function get_user():Promise<UserData | null> {
+export async function get_user(): Promise<UserData | null> {
   const cookieStore = await cookies();
   const session_id = cookieStore.get("session_id")?.value;
   if (!session_id) return null;
 
   const supabase = createClient(cookieStore);
-  const { data: session, error: sessionError } = await supabase
+
+  const { data, error } = await supabase
     .from("sessions")
-    .select("user_id")
+    .select("users(*)")
     .eq("session_id", session_id)
     .maybeSingle();
-  console.log('sessionError', sessionError)
-  if (sessionError || !session) return null;
 
-  const { data: user, error: userError } = await supabase
-    .from("users")
-    .select("*")
-    .eq("id", session.user_id)
-    .maybeSingle();
-  console.log('userError', userError)
-  if (userError) return null;
-  return user;
+  if (error || !data || !data.users) return null;
+
+  return data.users as unknown as UserData;
 }

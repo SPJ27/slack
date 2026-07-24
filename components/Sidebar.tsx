@@ -5,6 +5,7 @@ import SidebarBtn from "./SidebarBtn";
 import { get_user } from "@/utils/auth/get_user";
 import { UserData } from "@/types/UserData";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 interface NavItem {
   key: string;
@@ -23,7 +24,8 @@ const navItems: NavItem[] = [
 const Sidebar = () => {
   const [active, setActive] = useState("home");
   const [user, setUser] = useState<UserData | null>(null);
-
+  const url = usePathname()
+  if (url == '/' || url == '') return <></>
   useEffect(() => {
     get_user().then((u) => {
       setUser(u);

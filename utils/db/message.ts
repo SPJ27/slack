@@ -29,6 +29,6 @@ export async function add_message({
     reply_to,
     type,
     app,
-  });
+  }).select().single()
   return { data, error };
 }
